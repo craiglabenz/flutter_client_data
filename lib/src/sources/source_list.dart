@@ -164,7 +164,10 @@ class SourceList<T extends Model> extends DataContract<T> {
   }
 
   @override
-  Future<ReadListResult<T>> getItems(ReadDetails details) async {
+  Future<ReadListResult<T>> getItems(
+    ReadDetails details, [
+    List<ReadFilter<T>> filters = const [],
+  ]) async {
     List<T> items;
     final emptySources = <Source>[];
     for (final matchedSource in getSources(requestType: details.requestType)) {
@@ -174,7 +177,7 @@ class SourceList<T extends Model> extends DataContract<T> {
       }
       final source = matchedSource.source;
 
-      final maybeItems = await source.getItems(details);
+      final maybeItems = await source.getItems(details, filters);
 
       if (maybeItems.isRight() && maybeItems.getOrRaise().items.isNotEmpty) {
         items = maybeItems.getOrRaise().items;

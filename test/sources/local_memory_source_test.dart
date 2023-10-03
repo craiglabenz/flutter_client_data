@@ -22,6 +22,15 @@ class TestModel extends Model {
   String toString() => 'TestModel(id: $id, msg: $msg)';
 }
 
+class MsgStartsWithFilter<T extends TestModel> extends ReadFilter<T> {
+  const MsgStartsWithFilter(this.value);
+  final String value;
+  @override
+  bool predicate(T obj) => obj.msg.startsWith(value);
+  @override
+  Map<String, String> toParams() => {'msg__startsWith': value};
+}
+
 const readDetails = ReadDetails();
 const abcReadDetails = ReadDetails(setName: 'abc');
 const writeDetails = WriteDetails();
@@ -356,6 +365,17 @@ void main() {
         result,
         FoundItems<TestModel>.fromList([item2, item3], abcReadDetails, {}),
       );
+    });
+
+    test('honor filters', () async {
+      const item3 = TestModel(id: 'item 3', msg: 'holy moly');
+      mem.setItems([item, item2, item3], writeDetails);
+      final maybeResult = await mem.getItems(
+        readDetails,
+        [const MsgStartsWithFilter('holy')],
+      );
+      final result = maybeResult.getOrRaise();
+      expect(result, FoundItems<TestModel>.fromList([item3], readDetails, {}));
     });
   });
 

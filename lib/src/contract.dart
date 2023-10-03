@@ -77,8 +77,10 @@ abstract class DataContract<T extends Model> {
   );
   Future<ReadListResult<T>> getSelected(ReadDetails details);
 
-  // TODO(craiglabenz): Support arbitrary filters
-  Future<ReadListResult<T>> getItems(ReadDetails details);
+  Future<ReadListResult<T>> getItems(
+    ReadDetails details, [
+    List<ReadFilter<T>> filters = const [],
+  ]);
 
   // Setters.
   Future<WriteResult<T>> setItem(

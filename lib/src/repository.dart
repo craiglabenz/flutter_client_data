@@ -14,7 +14,11 @@ class Repository<T extends Model> extends DataContract {
   }
 
   @override
-  Future<ReadListResult<T>> getItems(ReadDetails details) {
+  Future<ReadListResult<T>> getItems(
+    ReadDetails details, [
+    // TODO: Why can't this be List<ReadFilter<T>> ??
+    List<ReadFilter> filters = const [],
+  ]) {
     // TODO: implement getItems
     throw UnimplementedError();
   }

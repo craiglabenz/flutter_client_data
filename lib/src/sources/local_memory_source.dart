@@ -64,7 +64,10 @@ class LocalMemorySource<T extends Model> extends Source<T> {
   /// Returns [FoundItems] if the set exists, even if it is empty. Returns
   /// [NotFound] if the setName is not in the sets cache.
   @override
-  Future<ReadListResult<T>> getItems(ReadDetails details) async {
+  Future<ReadListResult<T>> getItems(
+    ReadDetails details, [
+    List<ReadFilter<T>> filters = const [],
+  ]) async {
     if (!itemSets.containsKey(details.setName)) return const Left(notFound);
 
     // Assumes all IDs in `details.setName` have a matching object in `items`,
@@ -72,7 +75,18 @@ class LocalMemorySource<T extends Model> extends Source<T> {
     Iterable<T> itemsIter =
         itemSets[details.setName]!.map<T>((String id) => items[id]!);
 
-    return Right(FoundItems<T>.fromList(itemsIter.toList(), details, {}));
+    Iterable<T> filteredItemsIter =
+        itemsIter.where((T obj) => _passesAllFilters(obj, filters));
+
+    return Right(
+        FoundItems<T>.fromList(filteredItemsIter.toList(), details, {}));
+  }
+
+  bool _passesAllFilters(T obj, List<ReadFilter<T>> filters) {
+    for (ReadFilter<T> filter in filters) {
+      if (!filter.predicate(obj)) return false;
+    }
+    return true;
   }
 
   /// Returns all SelectedItems that are locally available.
