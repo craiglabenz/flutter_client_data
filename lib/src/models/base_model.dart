@@ -3,6 +3,7 @@ abstract class Model {
 
   final String? id;
   Map<String, dynamic> toJson();
+  Map<String, dynamic> serializeId() => {'id': id};
 }
 
 abstract class CreatedAtModel extends Model {

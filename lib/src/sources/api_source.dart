@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:client_data/client_data.dart';
@@ -56,7 +57,18 @@ class ApiSource<T extends Model> extends Source<T> {
     }
     lastUpdatedAt = DateTime.now();
     final result = await fetchItems(params);
-    return Right(FoundItems.fromList(hydrateListResponse(result), details, {}));
+
+    if (result is ApiError) {
+      return const Left(NotFound());
+    }
+
+    return Right(
+      FoundItems.fromList(
+        hydrateListResponse(result as ApiSuccess),
+        details,
+        {},
+      ),
+    );
   }
 
   @override
@@ -72,7 +84,12 @@ class ApiSource<T extends Model> extends Source<T> {
     };
 
     final ApiResult result = await fetchItems(params);
-    final List<T> items = hydrateListResponse(result);
+
+    if (result is ApiError) {
+      return const Left(NotFound());
+    }
+
+    final List<T> items = hydrateListResponse(result as ApiSuccess);
     final itemsById = <String, T>{};
     for (final T item in items) {
       // Objects from the server must always have an Id set.
@@ -90,9 +107,21 @@ class ApiSource<T extends Model> extends Source<T> {
   }
 
   @override
-  Future<ReadListResult<T>> getSelected(ReadDetails details) {
-    // TODO: implement getSelected
-    throw UnimplementedError();
+  Future<ReadListResult<T>> getSelected(ReadDetails details) async {
+    final request = ReadApiRequest(url: bindings.getSelectedItemsUrl());
+    final ApiResult result = await api.get(request);
+
+    if (result is ApiError) {
+      return const Left(NotFound());
+    }
+
+    final List<T> items = hydrateListResponse(result as ApiSuccess);
+    final itemsById = <String, T>{};
+    for (final T item in items) {
+      // Objects from the server must always have an Id set.
+      itemsById[item.id!] = item;
+    }
+    return Right(FoundItems<T>.fromMap(itemsById, details, {}));
   }
 
   void queueId(String id) {
@@ -120,6 +149,9 @@ class ApiSource<T extends Model> extends Source<T> {
         }
       },
       (r) {
+        for (final id in r.missingItemIds) {
+          loadedItems[id]!.complete(null);
+        }
         for (final id in r.itemsMap.keys) {
           if (!loadedItems.containsKey(id)) {
             continue;
@@ -153,11 +185,11 @@ class ApiSource<T extends Model> extends Source<T> {
           : bindings.getDetailUrl(item.id!),
       body: item.toJson(),
     );
-    return createdItemOr(
-      hydrateItemResponse(
-        await (item.id == null ? api.post(request) : api.update(request)),
-      ),
-    );
+
+    final result =
+        await (item.id == null ? api.post(request) : api.update(request));
+
+    return createdItemOr(hydrateItemResponse(result as ApiSuccess));
   }
 
   @override
@@ -167,62 +199,62 @@ class ApiSource<T extends Model> extends Source<T> {
   ) =>
       throw Exception('Should never call ApiSource.setItems');
 
-  T? hydrateItemResponse(ApiResult result) => result.map(
-        success: (ApiSuccess success) {
-          return success.body.map(
-            html: (HtmlApiResultBody body) => null,
-            json: (JsonApiResultBody body) {
-              if (body.data.containsKey('results')) {
-                // TODO: log that this is unexpected for [result.url]
-                if ((body.data['results'] as List).length != 1) {
-                  // TODO: log that this is even more unexpected
-                }
-                final List<T> items =
-                    (body.data['results'] as List<Map<String, dynamic>>)
-                        .map<T>(bindings.fromJson)
-                        .toList();
-                return items.first;
-              } else {
-                return bindings.fromJson(body.data);
-              }
-            },
-            plainText: (PlainTextApiResultBody body) => null,
-          );
+  T? hydrateItemResponse(ApiSuccess success) => success.body.map(
+        html: (HtmlApiResultBody body) => null,
+        json: (JsonApiResultBody body) {
+          if (body.data.containsKey('results')) {
+            // TODO: log that this is unexpected for [result.url]
+            if ((body.data['results'] as List).length != 1) {
+              // TODO: log that this is even more unexpected
+            }
+            final List<T> items =
+                (body.data['results'] as List<Map<String, dynamic>>)
+                    .map<T>(bindings.fromJson)
+                    .toList();
+            return items.first;
+          } else {
+            return bindings.fromJson(body.data);
+          }
         },
-        error: (ApiError error) {
-          // TODO: log this
-          return null;
-        },
+        plainText: (PlainTextApiResultBody body) => null,
       );
 
-  List<T> hydrateListResponse(ApiResult result) => result.map(
-        success: (ApiSuccess success) {
-          return success.body.map(
-            html: (HtmlApiResultBody body) => <T>[],
-            json: (JsonApiResultBody body) {
-              if (body.data.containsKey('results')) {
-                final List<Map<String, dynamic>> results =
-                    (body.data['results'] as List).cast<Map<String, dynamic>>();
-                final List<T> items =
-                    results.map<T>(bindings.fromJson).toList();
-                return items;
-              } else {
-                return [bindings.fromJson(body.data)];
-              }
-            },
-            plainText: (PlainTextApiResultBody body) => <T>[],
-          );
+  List<T> hydrateListResponse(ApiSuccess success) => success.body.map(
+        html: (HtmlApiResultBody body) => <T>[],
+        json: (JsonApiResultBody body) {
+          if (body.data.containsKey('results')) {
+            final List<Map<String, dynamic>> results =
+                (body.data['results'] as List).cast<Map<String, dynamic>>();
+            final List<T> items = results.map<T>(bindings.fromJson).toList();
+            return items;
+          } else {
+            return [bindings.fromJson(body.data)];
+          }
         },
-        error: (ApiError error) {
-          // TODO: log this
-          return <T>[];
-        },
+        plainText: (PlainTextApiResultBody body) => <T>[],
       );
 
   @override
-  Future<WriteResult<T>> setSelected(T item, WriteDetails details,
-      {bool isSelected = true}) {
-    // TODO: implement setSelected
-    throw UnimplementedError();
+  Future<WriteResult<T>> setSelected(
+    T item,
+    WriteDetails details, {
+    bool isSelected = true,
+  }) async {
+    final request = WriteApiRequest(
+      url: bindings.getSelectedItemsUrl(),
+      body: item.serializeId(),
+    );
+    final ApiResult result =
+        await (isSelected ? api.post(request) : api.delete(request));
+
+    return result.map(
+      success: (_) => Right(WriteSuccess(item)),
+      error: (ApiError e) {
+        if (e.statusCode == 404) {
+          return Left(WriteFailure.notFound(item.id!));
+        }
+        return Left(WriteFailure.error(e.error.plain));
+      },
+    );
   }
 }

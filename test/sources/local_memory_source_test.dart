@@ -1,35 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:client_data/client_data.dart';
-
-class TestModel extends Model {
-  const TestModel({required super.id, this.msg = 'default'});
-  final String msg;
-  @override
-  Map<String, dynamic> toJson() => {};
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is TestModel &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          msg == other.msg;
-
-  @override
-  int get hashCode => Object.hashAll([id, msg]);
-
-  @override
-  String toString() => 'TestModel(id: $id, msg: $msg)';
-}
-
-class MsgStartsWithFilter<T extends TestModel> extends ReadFilter<T> {
-  const MsgStartsWithFilter(this.value);
-  final String value;
-  @override
-  bool predicate(T obj) => obj.msg.startsWith(value);
-  @override
-  Map<String, String> toParams() => {'msg__startsWith': value};
-}
+import 'test_model.dart';
 
 const readDetails = ReadDetails();
 const abcReadDetails = ReadDetails(setName: 'abc');

@@ -205,7 +205,7 @@ class SourceList<T extends Model> extends DataContract<T> {
     // T _item = item;
     for (final ms in getSources(
       requestType: details.requestType,
-      // Hit API first if item is new to set Id
+      // Hit API first if item is new, so as to get an Id
       reversed: item.id == null,
     )) {
       if (ms.unmatched) continue;
@@ -213,7 +213,7 @@ class SourceList<T extends Model> extends DataContract<T> {
       final result = await ms.source.setItem(item, details);
       if (result.isLeft()) {
         return Left(
-          WriteFailure<T>.error('Failed to set $T with Id ${item.id}'),
+          WriteFailure<T>.error('Failed to save $T with Id ${item.id}'),
         );
       }
       final successfulResult = result.getOrRaise();
