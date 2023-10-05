@@ -77,27 +77,32 @@ class SourceList<T extends Model> extends DataContract<T> {
   }
 
   @override
-  Future<T?> getById(String id, ReadDetails details) async {
-    final emptySources = <Source>[];
+  Future<ReadResult<T>> getById(String id, ReadDetails details) async {
+    final emptySources = <Source<T>>[];
     for (final matchedSource in getSources(requestType: details.requestType)) {
       if (matchedSource.unmatched) {
         emptySources.add(matchedSource.source);
         continue;
       }
       final source = matchedSource.source;
-      final maybeFoundItem = await source.getById(id, details);
-      if (maybeFoundItem != null) {
+      final sourceResult = await source.getById(id, details);
+
+      if (sourceResult.isLeft()) {
+        return sourceResult;
+      }
+
+      final maybeItem = sourceResult.getOrRaise().item;
+      if (maybeItem != null) {
         await _cacheItem(
-          maybeFoundItem,
+          maybeItem,
           emptySources,
           details.toWriteDetails(),
         );
-        return maybeFoundItem;
-      } else {
-        emptySources.add(source);
+        return sourceResult;
       }
+      emptySources.add(source);
     }
-    return null;
+    return Right(ReadSuccess(null, details: details));
   }
 
   @override
@@ -124,17 +129,19 @@ class SourceList<T extends Model> extends DataContract<T> {
         pastSources.add(matchedSource.source);
         continue;
       }
-      final source = matchedSource.source;
+      final sourceResult =
+          await matchedSource.source.getByIds(missingIds, details);
 
-      final maybeItemsById = await source.getByIds(missingIds, details);
-      if (maybeItemsById.isRight()) {
-        final foundItems = maybeItemsById.getOrRaise();
-        items.addAll(foundItems.itemsMap);
-        // Mark which Source needs which items
-        for (final pastSource in pastSources) {
-          backfillMap.putIfAbsent(pastSource, () => <T>{});
-          backfillMap[pastSource]!.addAll(foundItems.items);
-        }
+      if (sourceResult.isLeft()) {
+        return sourceResult;
+      }
+
+      final readSuccess = sourceResult.getOrRaise();
+      items.addAll(readSuccess.itemsMap);
+      // Mark which Source needs which items
+      for (final pastSource in pastSources) {
+        backfillMap.putIfAbsent(pastSource, () => <T>{});
+        backfillMap[pastSource]!.addAll(readSuccess.items);
       }
 
       // Remove any now-known Ids from `missingIds`
@@ -142,7 +149,7 @@ class SourceList<T extends Model> extends DataContract<T> {
 
       // Note that we've already processed this Source, so if future Sources
       // produce any new items, we can backfill them to here.
-      pastSources.add(source);
+      pastSources.add(matchedSource.source);
     }
 
     // Persist any items we found to local stores
@@ -155,12 +162,9 @@ class SourceList<T extends Model> extends DataContract<T> {
       }
     }
 
-    return items.isNotEmpty
-        ? Right(
-            FoundItems<T>.fromMap(items, details, missingIds),
-          )
-        // ignore: prefer_const_constructors
-        : Left(notFound);
+    return Right(
+      ReadListSuccess<T>.fromMap(items, details, missingIds),
+    );
   }
 
   @override
@@ -175,23 +179,29 @@ class SourceList<T extends Model> extends DataContract<T> {
         emptySources.add(matchedSource.source);
         continue;
       }
-      final source = matchedSource.source;
 
-      final maybeItems = await source.getItems(details, filters);
+      final sourceResult = await matchedSource.source.getItems(
+        details,
+        filters,
+      );
 
-      if (maybeItems.isRight() && maybeItems.getOrRaise().items.isNotEmpty) {
-        items = maybeItems.getOrRaise().items;
+      if (sourceResult.isLeft()) {
+        return sourceResult;
+      }
+
+      items = sourceResult.getOrRaise().items;
+      if (items.isNotEmpty) {
         await _cacheItems(
           items,
           emptySources,
           details.toWriteDetails(),
         );
-        return Right(FoundItems.fromList(items, details, {}));
+        return Right(ReadListSuccess<T>.fromList(items, details, {}));
       } else {
-        emptySources.add(source);
+        emptySources.add(matchedSource.source);
       }
     }
-    return const Left(NotFound());
+    return Right(ReadListSuccess<T>.fromList([], details, {}));
   }
 
   @override
@@ -212,22 +222,21 @@ class SourceList<T extends Model> extends DataContract<T> {
 
       final result = await ms.source.setItem(item, details);
       if (result.isLeft()) {
-        return Left(
-          WriteFailure<T>.error('Failed to save $T with Id ${item.id}'),
-        );
+        return result;
       }
+
       final successfulResult = result.getOrRaise();
 
       if (item.id == null) {
         if (successfulResult.item.id == null) {
           return Left(
-            WriteFailure<T>.error('Failed to generate Id for new $T'),
+            WriteFailure<T>.serverError('Failed to generate Id for new $T'),
           );
         }
         item = successfulResult.item;
       }
     }
-    return Right(WriteSuccess<T>(item));
+    return Right(WriteSuccess<T>(item, details: details));
   }
 
   @override
@@ -239,10 +248,10 @@ class SourceList<T extends Model> extends DataContract<T> {
       if (ms.unmatched) continue;
       final result = await ms.source.setItems(items, details);
       if (result.isLeft()) {
-        return Left(WriteFailure<T>.error('Failed to setItems for Type $T'));
+        return result;
       }
     }
-    return Right(BulkWriteSuccess<T>(items));
+    return Right(BulkWriteSuccess<T>(items, details: details));
   }
 
   @override

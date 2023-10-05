@@ -14,7 +14,7 @@ class LocalMemorySource<T extends Model> extends Source<T> {
   /// with the given setName in `details`. By default, [ReadDetails] uses
   /// the [globalSetName], so that will match any item stored for any reason.
   @override
-  Future<T?> getById(String id, ReadDetails details) {
+  Future<ReadResult<T>> getById(String id, ReadDetails details) {
     T? item;
     if (!itemSets.containsKey(details.setName)) {
       item = null;
@@ -23,7 +23,9 @@ class LocalMemorySource<T extends Model> extends Source<T> {
     } else {
       item = items[id];
     }
-    return Future.value(item);
+    return Future.value(
+      Right(ReadSuccess(item, details: details)),
+    );
   }
 
   /// Used for bulk read methods that neither want inner futures nor
@@ -49,7 +51,7 @@ class LocalMemorySource<T extends Model> extends Source<T> {
     final itemsById = <String, T>{};
     final missingItemIds = <String>{};
     for (final String id in ids) {
-      final maybeItem = await getById(id, details);
+      final maybeItem = _getByIdSync(id, details.setName);
       if (maybeItem != null) {
         itemsById[id] = maybeItem;
       } else {
@@ -58,17 +60,28 @@ class LocalMemorySource<T extends Model> extends Source<T> {
     }
     // TODO(craiglabenz): Make sure SourceList or Repository does something with
     // non-empty `missingItemIds`.
-    return Right(FoundItems<T>.fromMap(itemsById, details, missingItemIds));
+    return Right(
+      ReadListSuccess<T>.fromMap(itemsById, details, missingItemIds),
+    );
   }
 
-  /// Returns [FoundItems] if the set exists, even if it is empty. Returns
-  /// [NotFound] if the setName is not in the sets cache.
   @override
   Future<ReadListResult<T>> getItems(
     ReadDetails details, [
     List<ReadFilter<T>> filters = const [],
   ]) async {
-    if (!itemSets.containsKey(details.setName)) return const Left(notFound);
+    if (!itemSets.containsKey(details.setName)) {
+      // TODO: This does not differentiate between known empty
+      // sets and brand new sets we just don't have anything for.
+      return Right(
+        ReadListSuccess<T>(
+          items: [],
+          itemsMap: {},
+          details: details,
+          missingItemIds: {},
+        ),
+      );
+    }
 
     // Assumes all IDs in `details.setName` have a matching object in `items`,
     // because that is the job of `setItem`.
@@ -79,7 +92,8 @@ class LocalMemorySource<T extends Model> extends Source<T> {
         itemsIter.where((T obj) => _passesAllFilters(obj, filters));
 
     return Right(
-        FoundItems<T>.fromList(filteredItemsIter.toList(), details, {}));
+      ReadListSuccess<T>.fromList(filteredItemsIter.toList(), details, {}),
+    );
   }
 
   bool _passesAllFilters(T obj, List<ReadFilter<T>> filters) {
@@ -107,7 +121,7 @@ class LocalMemorySource<T extends Model> extends Source<T> {
       }
     }
 
-    return Right(FoundItems.fromList(items, details, missingItemIds));
+    return Right(ReadListSuccess<T>.fromList(items, details, missingItemIds));
   }
 
   @override
@@ -115,16 +129,14 @@ class LocalMemorySource<T extends Model> extends Source<T> {
     if (details.shouldOverwrite || !items.containsKey(item.id)) {
       items[item.id!] = item;
     }
-    if (details.setName != '') {
-      if (!itemSets.containsKey(details.setName)) {
-        itemSets[details.setName] = <String>{};
-      }
-      if (!itemSets[details.setName]!.contains(item.id)) {
-        itemSets[details.setName]!.add(item.id!);
-      }
-      itemSets[globalSetName]!.add(item.id!);
+    if (!itemSets.containsKey(details.setName)) {
+      itemSets[details.setName] = <String>{};
     }
-    return Right(WriteSuccess<T>(item));
+    if (!itemSets[details.setName]!.contains(item.id)) {
+      itemSets[details.setName]!.add(item.id!);
+    }
+    itemSets[globalSetName]!.add(item.id!);
+    return Right(WriteSuccess<T>(item, details: details));
   }
 
   @override
@@ -132,7 +144,7 @@ class LocalMemorySource<T extends Model> extends Source<T> {
     for (T item in items) {
       setItem(item, details);
     }
-    return Future.value(Right(BulkWriteSuccess<T>(items)));
+    return Future.value(Right(BulkWriteSuccess<T>(items, details: details)));
   }
 
   @override
@@ -140,6 +152,6 @@ class LocalMemorySource<T extends Model> extends Source<T> {
       {bool isSelected = true}) async {
     setItem(item, details);
     isSelected ? selectedIds.add(item.id!) : selectedIds.remove(item.id);
-    return Right(WriteSuccess(item));
+    return Right(WriteSuccess(item, details: details));
   }
 }

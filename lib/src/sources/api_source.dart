@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:client_data/client_data.dart';
@@ -35,12 +34,14 @@ class ApiSource<T extends Model> extends Source<T> {
   SourceType get sourceType => SourceType.remote;
 
   @override
-  Future<T?> getById(String id, ReadDetails details) async {
+  Future<ReadResult<T>> getById(String id, ReadDetails details) async {
     if (!loadedItems.containsKey(id) || !loadedItems[id]!.isCompleted) {
       _print('Maybe queuing Id $id');
       queueId(id);
     }
-    return await loadedItems[id]!.future;
+    return Right(
+      ReadSuccess(await loadedItems[id]!.future, details: details),
+    );
   }
 
   @override
@@ -58,16 +59,15 @@ class ApiSource<T extends Model> extends Source<T> {
     lastUpdatedAt = DateTime.now();
     final result = await fetchItems(params);
 
-    if (result is ApiError) {
-      return const Left(NotFound());
-    }
-
-    return Right(
-      FoundItems.fromList(
-        hydrateListResponse(result as ApiSuccess),
-        details,
-        {},
+    return result.map(
+      success: (s) => Right(
+        ReadListSuccess.fromList(
+          hydrateListResponse(s),
+          details,
+          {},
+        ),
       ),
+      error: (e) => Left(ReadFailure.fromApiError(e)),
     );
   }
 
@@ -77,7 +77,7 @@ class ApiSource<T extends Model> extends Source<T> {
     ReadDetails details,
   ) async {
     if (ids.isEmpty) {
-      return Right(FoundItems<T>.fromList([], details, {}));
+      return Right(ReadListSuccess<T>.fromList([], details, {}));
     }
     final Params params = <String, String>{
       'id__in': ids.join(','),
@@ -85,25 +85,28 @@ class ApiSource<T extends Model> extends Source<T> {
 
     final ApiResult result = await fetchItems(params);
 
-    if (result is ApiError) {
-      return const Left(NotFound());
-    }
+    return result.map(
+      success: (s) {
+        final List<T> items = hydrateListResponse(result as ApiSuccess);
+        final itemsById = <String, T>{};
+        for (final T item in items) {
+          // Objects from the server must always have an Id set.
+          itemsById[item.id!] = item;
+        }
 
-    final List<T> items = hydrateListResponse(result as ApiSuccess);
-    final itemsById = <String, T>{};
-    for (final T item in items) {
-      // Objects from the server must always have an Id set.
-      itemsById[item.id!] = item;
-    }
+        final missingItemIds = <String>{};
+        for (String id in ids) {
+          if (!itemsById.containsKey(id)) {
+            missingItemIds.add(id);
+          }
+        }
 
-    final missingItemIds = <String>{};
-    for (String id in ids) {
-      if (!itemsById.containsKey(id)) {
-        missingItemIds.add(id);
-      }
-    }
-
-    return Right(FoundItems<T>.fromMap(itemsById, details, missingItemIds));
+        return Right(
+          ReadListSuccess<T>.fromMap(itemsById, details, missingItemIds),
+        );
+      },
+      error: (e) => Left(ReadFailure.fromApiError(e)),
+    );
   }
 
   @override
@@ -111,17 +114,18 @@ class ApiSource<T extends Model> extends Source<T> {
     final request = ReadApiRequest(url: bindings.getSelectedItemsUrl());
     final ApiResult result = await api.get(request);
 
-    if (result is ApiError) {
-      return const Left(NotFound());
-    }
-
-    final List<T> items = hydrateListResponse(result as ApiSuccess);
-    final itemsById = <String, T>{};
-    for (final T item in items) {
-      // Objects from the server must always have an Id set.
-      itemsById[item.id!] = item;
-    }
-    return Right(FoundItems<T>.fromMap(itemsById, details, {}));
+    return result.map(
+      success: (s) {
+        final List<T> items = hydrateListResponse(result as ApiSuccess);
+        final itemsById = <String, T>{};
+        for (final T item in items) {
+          // Objects from the server must always have an Id set.
+          itemsById[item.id!] = item;
+        }
+        return Right(ReadListSuccess<T>.fromMap(itemsById, details, {}));
+      },
+      error: (e) => Left(ReadFailure.fromApiError(e)),
+    );
   }
 
   void queueId(String id) {
@@ -143,12 +147,12 @@ class ApiSource<T extends Model> extends Source<T> {
     final byIds =
         await getByIds(ids, const ReadDetails(requestType: RequestType.global));
     byIds.fold(
-      (l) {
+      (ReadFailure<T> l) {
         for (final id in ids) {
           loadedItems[id]!.complete(null);
         }
       },
-      (r) {
+      (ReadListSuccess<T> r) {
         for (final id in r.missingItemIds) {
           loadedItems[id]!.complete(null);
         }
@@ -158,7 +162,7 @@ class ApiSource<T extends Model> extends Source<T> {
           }
           if (!loadedItems[id]!.isCompleted) {
             idsCurrentlyBeingFetched.remove(id);
-            loadedItems[id]!.complete(r.itemsMap[id]);
+            loadedItems[id]!.complete(r.itemsMap[id]! as T);
             loadedItems.remove(id);
           }
         }
@@ -186,10 +190,17 @@ class ApiSource<T extends Model> extends Source<T> {
       body: item.toJson(),
     );
 
-    final result =
-        await (item.id == null ? api.post(request) : api.update(request));
+    final result = await (item.id == null //
+            ? api.post(request)
+            : api.update(request) //
+        );
 
-    return createdItemOr(hydrateItemResponse(result as ApiSuccess));
+    return result.map(
+      success: (s) => Right(
+        WriteSuccess(hydrateItemResponse(s)!, details: details),
+      ),
+      error: (e) => Left(WriteFailure.fromApiError(e)),
+    );
   }
 
   @override
@@ -248,13 +259,8 @@ class ApiSource<T extends Model> extends Source<T> {
         await (isSelected ? api.post(request) : api.delete(request));
 
     return result.map(
-      success: (_) => Right(WriteSuccess(item)),
-      error: (ApiError e) {
-        if (e.statusCode == 404) {
-          return Left(WriteFailure.notFound(item.id!));
-        }
-        return Left(WriteFailure.error(e.error.plain));
-      },
+      success: (_) => Right(WriteSuccess(item, details: details)),
+      error: (e) => Left(WriteFailure.fromApiError(e)),
     );
   }
 }

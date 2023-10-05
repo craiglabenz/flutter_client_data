@@ -2,7 +2,7 @@ import 'package:client_data/client_data.dart';
 
 class Repository<T extends Model> extends DataContract {
   @override
-  Future<T?> getById(String id, ReadDetails details) {
+  Future<ReadResult<T>> getById(String id, ReadDetails details) {
     // TODO: implement getById
     throw UnimplementedError();
   }

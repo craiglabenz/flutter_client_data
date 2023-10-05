@@ -45,8 +45,12 @@ void main() {
           );
         },
       );
-      final item = await src.getById('abc', const ReadDetails());
-      expect(item, const TestModel(id: 'abc', msg: 'amazing'));
+      final result = await src.getById('abc', const ReadDetails());
+      expect(result, isRight);
+      expect(
+        result.getOrRaise().item,
+        const TestModel(id: 'abc', msg: 'amazing'),
+      );
     });
 
     test('work with a real timer', () async {
@@ -60,8 +64,12 @@ void main() {
         },
         timer: BatchTimer(),
       );
-      final item = await src.getById('abc', const ReadDetails());
-      expect(item, const TestModel(id: 'abc', msg: 'amazing'));
+      final result = await src.getById('abc', const ReadDetails());
+      expect(result, isRight);
+      expect(
+        result.getOrRaise().item,
+        const TestModel(id: 'abc', msg: 'amazing'),
+      );
     });
 
     test('return null from a 404', () async {
@@ -74,8 +82,9 @@ void main() {
           );
         },
       );
-      final item = await src.getById('abc', const ReadDetails());
-      expect(item, isNull);
+      final result = await src.getById('abc', const ReadDetails());
+      expect(result, isRight);
+      expect(result.getOrRaise().item, null);
     }, timeout: const Timeout(Duration(milliseconds: 50)));
   });
 
