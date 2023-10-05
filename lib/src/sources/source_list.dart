@@ -1,27 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:client_data/client_data.dart';
 
-/// Indicates whether a given [Source] produced data, which is used when we turn
-/// around and locally cache objects fetched from the server.
-class MatchedSource<T extends Model> {
-  MatchedSource._({required this.source, required this.matched});
-  factory MatchedSource.matched(Source<T> source) => MatchedSource._(
-        source: source,
-        matched: true,
-      );
-  factory MatchedSource.unmatched(Source<T> source) => MatchedSource._(
-        source: source,
-        matched: false,
-      );
-
-  final Source<T> source;
-  final bool matched;
-  bool get unmatched => !matched;
-
-  @override
-  String toString() => 'MatchedSource(matched=$matched, source=$source)';
-}
-
 /// Data component which iteratively asks individual sources for an object.
 ///
 /// Sources that originally fail to yield and object have it cached if a
@@ -260,4 +239,25 @@ class SourceList<T extends Model> extends DataContract<T> {
     // TODO: implement setSelected
     throw UnimplementedError();
   }
+}
+
+/// Indicates whether a given [Source] produced data, which is used when we turn
+/// around and locally cache objects fetched from the server.
+class MatchedSource<T extends Model> {
+  MatchedSource._({required this.source, required this.matched});
+  factory MatchedSource.matched(Source<T> source) => MatchedSource._(
+        source: source,
+        matched: true,
+      );
+  factory MatchedSource.unmatched(Source<T> source) => MatchedSource._(
+        source: source,
+        matched: false,
+      );
+
+  final Source<T> source;
+  final bool matched;
+  bool get unmatched => !matched;
+
+  @override
+  String toString() => 'MatchedSource(matched=$matched, source=$source)';
 }

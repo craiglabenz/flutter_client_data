@@ -1,3 +1,3 @@
-typedef Body = Map<String, dynamic>;
-typedef Params = Map<String, dynamic>;
-typedef Json = Map<String, dynamic>;
+typedef Body = Map<String, Object?>;
+typedef Params = Map<String, Object?>;
+typedef Json = Map<String, Object?>;
