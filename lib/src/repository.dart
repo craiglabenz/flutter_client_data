@@ -1,50 +1,39 @@
 import 'package:client_data/client_data.dart';
 
-class Repository<T extends Model> extends DataContract {
-  @override
-  Future<ReadResult<T>> getById(String id, ReadDetails details) {
-    // TODO: implement getById
-    throw UnimplementedError();
-  }
+class Repository<T extends Model> extends DataContract<T> {
+  Repository(this.sourceList);
+
+  final SourceList<T> sourceList;
 
   @override
-  Future<ReadListResult<T>> getByIds(Set<String> ids, ReadDetails details) {
-    // TODO: implement getByIds
-    throw UnimplementedError();
-  }
+  Future<ReadResult<T>> getById(String id, ReadDetails details) =>
+      sourceList.getById(id, details);
+
+  @override
+  Future<ReadListResult<T>> getByIds(Set<String> ids, ReadDetails details) =>
+      sourceList.getByIds(ids, details);
 
   @override
   Future<ReadListResult<T>> getItems(
     ReadDetails details, [
-    // TODO: Why can't this be List<ReadFilter<T>> ??
-    List<ReadFilter> filters = const [],
-  ]) {
-    // TODO: implement getItems
-    throw UnimplementedError();
-  }
+    List<ReadFilter<T>> filters = const [],
+  ]) =>
+      sourceList.getItems(details, filters);
 
   @override
-  Future<ReadListResult<Model>> getSelected(ReadDetails details) {
-    // TODO: implement getSelected
-    throw UnimplementedError();
-  }
+  Future<ReadListResult<T>> getSelected(ReadDetails details) =>
+      sourceList.getSelected(details);
 
   @override
-  Future<WriteResult<T>> setItem(Model item, WriteDetails details) {
-    // TODO: implement setItem
-    throw UnimplementedError();
-  }
+  Future<WriteResult<T>> setItem(T item, WriteDetails details) =>
+      sourceList.setItem(item, details);
 
   @override
-  Future<WriteListResult<T>> setItems(List<Model> items, WriteDetails details) {
-    // TODO: implement setItems
-    throw UnimplementedError();
-  }
+  Future<WriteListResult<T>> setItems(List<T> items, WriteDetails details) =>
+      sourceList.setItems(items, details);
 
   @override
-  Future<WriteResult<Model>> setSelected(Model item, WriteDetails details,
-      {bool isSelected = true}) {
-    // TODO: implement setSelected
-    throw UnimplementedError();
-  }
+  Future<WriteResult<T>> setSelected(T item, WriteDetails details,
+          {bool isSelected = true}) =>
+      sourceList.setSelected(item, details, isSelected: isSelected);
 }
