@@ -126,7 +126,13 @@ class LocalMemorySource<T extends Model> extends Source<T> {
 
   @override
   Future<WriteResult<T>> setItem(T item, WriteDetails details) async {
-    if (details.shouldOverwrite || !items.containsKey(item.id)) {
+    assert(
+      item.id != null,
+      'LocalMemorySource can only persist items with an Id',
+    );
+
+    if (details.shouldOverwrite ||
+        (item.id != null && !items.containsKey(item.id))) {
       items[item.id!] = item;
     }
     if (!itemSets.containsKey(details.setName)) {

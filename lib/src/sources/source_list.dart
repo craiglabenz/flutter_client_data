@@ -48,10 +48,17 @@ class SourceList<T extends Model> extends DataContract<T> {
   Future<void> _cacheItems(
     List<T> items,
     List<Source> emptySources,
-    WriteDetails details,
-  ) async {
+    WriteDetails details, [
+    bool? isSelected,
+  ]) async {
     for (final source in emptySources) {
-      await source.setItems(items, details);
+      if (isSelected != null) {
+        for (final T item in items) {
+          source.setSelected(item, details, isSelected: isSelected);
+        }
+      } else {
+        await source.setItems(items, details);
+      }
     }
   }
 
@@ -89,6 +96,11 @@ class SourceList<T extends Model> extends DataContract<T> {
     Set<String> ids,
     ReadDetails details,
   ) async {
+    assert(
+      details.setName == globalSetName,
+      'Must not supply a setName to getByIds',
+    );
+
     final items = <String, T>{};
     final pastSources = <Source>[];
     final backfillMap = <Source, Set<T>>{};
@@ -151,7 +163,6 @@ class SourceList<T extends Model> extends DataContract<T> {
     ReadDetails details, [
     List<ReadFilter<T>> filters = const [],
   ]) async {
-    List<T> items;
     final emptySources = <Source>[];
     for (final matchedSource in getSources(requestType: details.requestType)) {
       if (matchedSource.unmatched) {
@@ -168,7 +179,7 @@ class SourceList<T extends Model> extends DataContract<T> {
         return sourceResult;
       }
 
-      items = sourceResult.getOrRaise().items;
+      List<T> items = sourceResult.getOrRaise().items;
       if (items.isNotEmpty) {
         await _cacheItems(
           items,
@@ -184,9 +195,36 @@ class SourceList<T extends Model> extends DataContract<T> {
   }
 
   @override
-  Future<ReadListResult<T>> getSelected(ReadDetails details) {
-    // TODO: implement getSelected
-    throw UnimplementedError();
+  Future<ReadListResult<T>> getSelected(ReadDetails details) async {
+    assert(
+      details.setName == globalSetName,
+      'Must not supply a setName to getSelected',
+    );
+    final emptySources = <Source>[];
+    for (final matchedSource in getSources(requestType: details.requestType)) {
+      if (matchedSource.unmatched) {
+        emptySources.add(matchedSource.source);
+        continue;
+      }
+      final sourceResult = await matchedSource.source.getSelected(details);
+
+      if (sourceResult.isLeft()) {
+        return sourceResult;
+      }
+      List<T> items = sourceResult.getOrRaise().items;
+      if (items.isNotEmpty) {
+        await _cacheItems(
+          items,
+          emptySources,
+          details.toWriteDetails(),
+          true,
+        );
+        return Right(ReadListSuccess<T>.fromList(items, details, {}));
+      } else {
+        emptySources.add(matchedSource.source);
+      }
+    }
+    return Right(ReadListSuccess<T>.fromList([], details, {}));
   }
 
   @override
@@ -223,7 +261,12 @@ class SourceList<T extends Model> extends DataContract<T> {
     List<T> items,
     WriteDetails details,
   ) async {
-    for (final ms in getSources(requestType: details.requestType)) {
+    assert(details.requestType == RequestType.local,
+        'setItems is a local-only method');
+    for (final ms in getSources(
+      requestType: details.requestType,
+      reversed: true,
+    )) {
       if (ms.unmatched) continue;
       final result = await ms.source.setItems(items, details);
       if (result.isLeft()) {

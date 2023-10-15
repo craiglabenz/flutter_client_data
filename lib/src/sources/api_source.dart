@@ -196,9 +196,11 @@ class ApiSource<T extends Model> extends Source<T> {
         );
 
     return result.map(
-      success: (s) => Right(
-        WriteSuccess(hydrateItemResponse(s)!, details: details),
-      ),
+      success: (s) {
+        return Right(
+          WriteSuccess(hydrateItemResponse(s)!, details: details),
+        );
+      },
       error: (e) => Left(WriteFailure.fromApiError(e)),
     );
   }
@@ -218,10 +220,9 @@ class ApiSource<T extends Model> extends Source<T> {
             if ((body.data['results'] as List).length != 1) {
               // TODO: log that this is even more unexpected
             }
-            final List<T> items =
-                (body.data['results'] as List<Map<String, dynamic>>)
-                    .map<T>(bindings.fromJson)
-                    .toList();
+            final List<T> items = (body.data['results'].cast<Json>())
+                .map<T>(bindings.fromJson)
+                .toList();
             return items.first;
           } else {
             return bindings.fromJson(body.data);
@@ -235,7 +236,7 @@ class ApiSource<T extends Model> extends Source<T> {
         json: (JsonApiResultBody body) {
           if (body.data.containsKey('results')) {
             final List<Map<String, dynamic>> results =
-                (body.data['results'] as List).cast<Map<String, dynamic>>();
+                (body.data['results'] as List).cast<Json>();
             final List<T> items = results.map<T>(bindings.fromJson).toList();
             return items;
           } else {
