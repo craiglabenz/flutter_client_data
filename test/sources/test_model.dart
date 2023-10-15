@@ -1,5 +1,4 @@
 import 'package:client_data/client_data.dart';
-import 'package:json_annotation/json_annotation.dart';
 
 class TestModel extends Model {
   const TestModel({required super.id, this.msg = 'default'});

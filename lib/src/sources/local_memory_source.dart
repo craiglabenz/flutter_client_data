@@ -58,8 +58,6 @@ class LocalMemorySource<T extends Model> extends Source<T> {
         missingItemIds.add(id);
       }
     }
-    // TODO(craiglabenz): Make sure SourceList or Repository does something with
-    // non-empty `missingItemIds`.
     return Right(
       ReadListSuccess<T>.fromMap(itemsById, details, missingItemIds),
     );
@@ -71,7 +69,7 @@ class LocalMemorySource<T extends Model> extends Source<T> {
     List<ReadFilter<T>> filters = const [],
   ]) async {
     if (!itemSets.containsKey(details.setName)) {
-      // TODO: This does not differentiate between known empty
+      // This does not differentiate between known empty
       // sets and brand new sets we just don't have anything for.
       return Right(
         ReadListSuccess<T>(

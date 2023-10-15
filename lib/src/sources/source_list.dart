@@ -263,10 +263,7 @@ class SourceList<T extends Model> extends DataContract<T> {
   ) async {
     assert(details.requestType == RequestType.local,
         'setItems is a local-only method');
-    for (final ms in getSources(
-      requestType: details.requestType,
-      reversed: true,
-    )) {
+    for (final ms in getSources(requestType: details.requestType)) {
       if (ms.unmatched) continue;
       final result = await ms.source.setItems(items, details);
       if (result.isLeft()) {
@@ -278,9 +275,20 @@ class SourceList<T extends Model> extends DataContract<T> {
 
   @override
   Future<WriteResult<T>> setSelected(T item, WriteDetails details,
-      {bool isSelected = true}) {
-    // TODO: implement setSelected
-    throw UnimplementedError();
+      {bool isSelected = true}) async {
+    assert(item.id != null, 'Can only mark saved items as selected');
+    for (final ms in getSources(requestType: details.requestType)) {
+      if (ms.unmatched) continue;
+      final result = await ms.source.setSelected(
+        item,
+        details,
+        isSelected: isSelected,
+      );
+      if (result.isLeft()) {
+        return result;
+      }
+    }
+    return Right(WriteSuccess<T>(item, details: details));
   }
 }
 

@@ -162,7 +162,7 @@ class ApiSource<T extends Model> extends Source<T> {
           }
           if (!loadedItems[id]!.isCompleted) {
             idsCurrentlyBeingFetched.remove(id);
-            loadedItems[id]!.complete(r.itemsMap[id]! as T);
+            loadedItems[id]!.complete(r.itemsMap[id]!);
             loadedItems.remove(id);
           }
         }

@@ -376,4 +376,29 @@ void main() {
       );
     });
   });
+
+  group('SourceList.setSelected should', () {
+    test('persist remotely', () async {
+      const newObj = TestModel(id: 'item 1', msg: 'new');
+      final sl = getSourceList(getRequestDelegate([detailResponseBody]));
+      final writeResult = await sl.setSelected(
+        newObj,
+        const WriteDetails(requestType: RequestType.local),
+      );
+      expect(writeResult, isRight);
+    });
+
+    test('persist locally', () async {
+      const newObj = TestModel(id: 'item 1', msg: 'new');
+      final sl = getSourceList(getRequestDelegate([]));
+      await sl.setSelected(
+        newObj,
+        const WriteDetails(requestType: RequestType.local),
+      );
+      expect(
+        (sl.sources.first as LocalMemorySource).selectedIds,
+        contains(newObj.id!),
+      );
+    });
+  });
 }
