@@ -2,8 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:client_data/client_data.dart';
 import 'test_model.dart';
 
-const readDetails = ReadDetails();
-const abcReadDetails = ReadDetails(setName: 'abc');
+const readDetails = ReadDetails<TestModel>();
+const abcReadDetails = ReadDetails<TestModel>(setName: 'abc');
 const writeDetails = WriteDetails();
 const abcWriteDetails = WriteDetails(setName: 'abc');
 
@@ -217,7 +217,7 @@ void main() {
       mem.setItem(item, writeDetails);
       final retrievedItem = await mem.getById(
         item.id!,
-        const ReadDetails(setName: 'abc'),
+        const ReadDetails<TestModel>(setName: 'abc'),
       );
       expect(retrievedItem, isRight);
       expect(retrievedItem.getOrRaise().item, isNull);
@@ -225,7 +225,7 @@ void main() {
       mem.setItem(item, const WriteDetails(setName: 'abc'));
       final retrievedItem2 = await mem.getById(
         item.id!,
-        const ReadDetails(setName: 'abc'),
+        const ReadDetails<TestModel>(setName: 'abc'),
       );
       expect(retrievedItem2, isRight);
       expect(retrievedItem2.getOrRaise().item, item);
@@ -292,14 +292,17 @@ void main() {
     test('return no items from setName if empty', () async {
       mem.setItems([item, item2], const WriteDetails(setName: 'abc'));
 
-      final maybeResult = await mem.getItems(const ReadDetails(setName: 'xyz'));
+      final maybeResult = await mem.getItems(
+        const ReadDetails<TestModel>(setName: 'xyz'),
+      );
       expect(maybeResult, isRight);
       final result = maybeResult.getOrRaise();
-      expect(
-        result,
-        ReadListSuccess<TestModel>.fromList(
-            [], const ReadDetails(setName: 'xyz'), {}),
-      );
+      expect(result.items, isEmpty);
+      expect(result.details.setName, 'xyz');
+      expect(result.itemsMap, isEmpty);
+      expect(result.missingItemIds, isEmpty);
+      expect(result.details.pagination, isNull);
+      expect(result.details, const ReadDetails<TestModel>(setName: 'xyz'));
 
       // But globalSetName still returns
       final maybeResult2 = await mem.getItems(readDetails);
@@ -342,13 +345,23 @@ void main() {
     test('honor filters', () async {
       const item3 = TestModel(id: 'item 3', msg: 'holy moly');
       mem.setItems([item, item2, item3], writeDetails);
-      final maybeResult = await mem.getItems(
+      final maybeResult = await mem.getFilteredItems(
         readDetails,
         [const MsgStartsWithFilter('holy')],
       );
       final result = maybeResult.getOrRaise();
       expect(result,
           ReadListSuccess<TestModel>.fromList([item3], readDetails, {}));
+    });
+
+    test('return items', () async {
+      mem.setItems([item, item2], writeDetails);
+      final maybeResult = await mem.getItems(readDetails);
+      final result = maybeResult.getOrRaise();
+      expect(
+        result,
+        ReadListSuccess<TestModel>.fromList([item, item2], readDetails, {}),
+      );
     });
   });
 
@@ -377,7 +390,7 @@ void main() {
       const item3 = TestModel(id: 'item 3');
       mem.setSelected(item3, const WriteDetails(setName: 'setName'));
 
-      const localReadDetails = ReadDetails(setName: 'setName');
+      const localReadDetails = ReadDetails<TestModel>(setName: 'setName');
       final maybeResult = await mem.getSelected(
         localReadDetails,
       );

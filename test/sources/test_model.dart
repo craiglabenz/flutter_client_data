@@ -43,6 +43,9 @@ class MsgStartsWithFilter<T extends TestModel> extends ReadFilter<T> {
   bool predicate(T obj) => obj.msg.startsWith(value);
   @override
   Map<String, String> toParams() => {'msg__startsWith': value};
+
+  @override
+  List<Object?> get props => [value];
 }
 
 class FakeSourceList<T extends Model> extends Fake implements SourceList<T> {
@@ -71,10 +74,14 @@ class FakeSourceList<T extends Model> extends Fake implements SourceList<T> {
       );
 
   @override
-  Future<ReadListResult<T>> getItems(
-    ReadDetails details, [
-    List<ReadFilter<T>> filters = const [],
-  ]) =>
+  Future<ReadListResult<T>> getItems(ReadDetails details) =>
+      getFilteredItems(details, const []);
+
+  @override
+  Future<ReadListResult<T>> getFilteredItems(
+    ReadDetails details,
+    List<ReadFilter<T>> filters,
+  ) =>
       Future.value(
         Right(
           ReadListSuccess<T>.fromList([objs.first], details, {}),
@@ -123,4 +130,23 @@ class FakeSourceList<T extends Model> extends Fake implements SourceList<T> {
           WriteSuccess<T>(objs.first, details: details),
         ),
       );
+}
+
+/// Checks whether a model's given field name equals the given value.
+///
+/// Not the most performant class, as this re-serializes the model. Best used
+/// only for tests.
+class FieldEquals<T extends Model> extends ReadFilter<T> {
+  const FieldEquals(this.fieldName, this.value);
+  final String fieldName;
+  final String value;
+
+  @override
+  bool predicate(T obj) => obj.toJson()[fieldName] == value;
+
+  @override
+  List<Object?> get props => [fieldName, value, T.runtimeType];
+
+  @override
+  Map<String, String> toParams() => <String, String>{fieldName: value};
 }

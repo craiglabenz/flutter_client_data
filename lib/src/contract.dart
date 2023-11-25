@@ -4,18 +4,20 @@ abstract class DataContract<T extends Model> {
   // Getters.
   Future<ReadResult<T>> getById(
     String id,
-    ReadDetails details,
+    ReadDetails<T> details,
   );
   Future<ReadListResult<T>> getByIds(
     Set<String> ids,
-    ReadDetails details,
+    ReadDetails<T> details,
   );
-  Future<ReadListResult<T>> getSelected(ReadDetails details);
+  Future<ReadListResult<T>> getSelected(ReadDetails<T> details);
 
-  Future<ReadListResult<T>> getItems(
-    ReadDetails details, [
-    List<ReadFilter<T>> filters = const [],
-  ]);
+  Future<ReadListResult<T>> getItems(ReadDetails<T> details);
+
+  Future<ReadListResult<T>> getFilteredItems(
+    ReadDetails<T> details,
+    List<ReadFilter<T>> filters,
+  );
 
   // Setters.
   Future<WriteResult<T>> setItem(

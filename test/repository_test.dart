@@ -10,27 +10,29 @@ void main() {
   const TestModel obj = TestModel(id: 'also does not matter');
 
   group('Repository methods should pass through to SourceList', () {
+    // ignore: prefer_const_constructors
+    final emptyReadDetails = ReadDetails<TestModel>();
     test('including getById', () async {
       expect(
-        await repo.getById('also does not matter', const ReadDetails()),
+        await repo.getById('also does not matter', emptyReadDetails),
         isRight,
       );
     });
     test('including getById', () async {
       expect(
-        await repo.getByIds({'also does not matter'}, const ReadDetails()),
+        await repo.getByIds({'also does not matter'}, emptyReadDetails),
         isRight,
       );
     });
     test('including getItems', () async {
       expect(
-        await repo.getItems(const ReadDetails()),
+        await repo.getItems(emptyReadDetails),
         isRight,
       );
     });
     test('including getSelected', () async {
       expect(
-        await repo.getSelected(const ReadDetails()),
+        await repo.getSelected(emptyReadDetails),
         isRight,
       );
     });

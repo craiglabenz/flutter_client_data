@@ -63,7 +63,7 @@ class SourceList<T extends Model> extends DataContract<T> {
   }
 
   @override
-  Future<ReadResult<T>> getById(String id, ReadDetails details) async {
+  Future<ReadResult<T>> getById(String id, ReadDetails<T> details) async {
     final emptySources = <Source<T>>[];
     for (final matchedSource in getSources(requestType: details.requestType)) {
       if (matchedSource.unmatched) {
@@ -94,7 +94,7 @@ class SourceList<T extends Model> extends DataContract<T> {
   @override
   Future<ReadListResult<T>> getByIds(
     Set<String> ids,
-    ReadDetails details,
+    ReadDetails<T> details,
   ) async {
     assert(
       details.setName == globalSetName,
@@ -159,10 +159,14 @@ class SourceList<T extends Model> extends DataContract<T> {
   }
 
   @override
-  Future<ReadListResult<T>> getItems(
-    ReadDetails details, [
-    List<ReadFilter<T>> filters = const [],
-  ]) async {
+  Future<ReadListResult<T>> getItems(ReadDetails<T> details) =>
+      getFilteredItems(details, const []);
+
+  @override
+  Future<ReadListResult<T>> getFilteredItems(
+    ReadDetails<T> details,
+    List<ReadFilter<T>> filters,
+  ) async {
     final emptySources = <Source>[];
     for (final matchedSource in getSources(requestType: details.requestType)) {
       if (matchedSource.unmatched) {
@@ -170,7 +174,7 @@ class SourceList<T extends Model> extends DataContract<T> {
         continue;
       }
 
-      final sourceResult = await matchedSource.source.getItems(
+      final sourceResult = await matchedSource.source.getFilteredItems(
         details,
         filters,
       );
@@ -195,7 +199,7 @@ class SourceList<T extends Model> extends DataContract<T> {
   }
 
   @override
-  Future<ReadListResult<T>> getSelected(ReadDetails details) async {
+  Future<ReadListResult<T>> getSelected(ReadDetails<T> details) async {
     assert(
       details.setName == globalSetName,
       'Must not supply a setName to getSelected',

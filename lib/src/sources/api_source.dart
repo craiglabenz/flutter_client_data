@@ -45,10 +45,14 @@ class ApiSource<T extends Model> extends Source<T> {
   }
 
   @override
-  Future<ReadListResult<T>> getItems(
-    ReadDetails details, [
-    List<ReadFilter<T>> filters = const [],
-  ]) async {
+  Future<ReadListResult<T>> getItems(ReadDetails details) =>
+      getFilteredItems(details, const []);
+
+  @override
+  Future<ReadListResult<T>> getFilteredItems(
+    ReadDetails details,
+    List<ReadFilter<T>> filters,
+  ) async {
     final Params params = <String, String>{};
 
     final bool shouldRefresh =

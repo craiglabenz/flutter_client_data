@@ -26,9 +26,11 @@ const errorBody = '{"error": "not found"}';
 final obj = TestModel.fromJson(jsonDecode(detailResponseBody));
 final obj2 = TestModel.fromJson(jsonDecode(detailResponseBody2));
 
-const rd = ReadDetails();
-const localRd = ReadDetails(requestType: RequestType.local);
-const remoteRd = ReadDetails(requestType: RequestType.refresh);
+const rd = ReadDetails<TestModel>();
+const localRd = ReadDetails<TestModel>(requestType: RequestType.local);
+const remoteRd = ReadDetails<TestModel>(
+  requestType: RequestType.refresh,
+);
 const rdAbc = ReadDetails(setName: 'abc');
 
 const wrtAbc = WriteDetails(setName: 'abc');
@@ -292,12 +294,49 @@ void main() {
       expect(remoteReadResult.getOrRaise().items.length, 2);
 
       final localReadResult = await sl.getItems(
-          const ReadDetails(setName: 'abc', requestType: RequestType.local));
+        const ReadDetails<TestModel>(
+            setName: 'abc', requestType: RequestType.local),
+      );
       expect(localReadResult.getOrRaise().items.length, 0);
 
-      final localReadResult2 =
-          await sl.getItems(const ReadDetails(requestType: RequestType.local));
+      final localReadResult2 = await sl.getItems(
+          const ReadDetails<TestModel>(requestType: RequestType.local));
       expect(localReadResult2.getOrRaise().items.length, 2);
+    });
+
+    test('honor filters', () async {
+      final sl = getSourceList(getRequestDelegate([
+        twoElementResponseBody,
+        twoElementResponseBody,
+      ]));
+      await sl.getItems(rd);
+
+      final localReadResult = await sl.getItems(
+        const ReadDetails<TestModel>(requestType: RequestType.local),
+      );
+      expect(localReadResult.getOrRaise().items.length, 2);
+
+      final localReadResult2 = await sl.getFilteredItems(
+          const ReadDetails<TestModel>(requestType: RequestType.local),
+          const [FieldEquals<TestModel>('msg', 'Fred')]);
+      expect(localReadResult2.getOrRaise().items.length, 1);
+      expect(localReadResult2.getOrRaise().items.first.msg, 'Fred');
+
+      final localReadResult3 = await sl.getFilteredItems(
+          const ReadDetails<TestModel>(requestType: RequestType.global),
+          const [FieldEquals<TestModel>('msg', 'Fred')]);
+      expect(localReadResult3.getOrRaise().items.length, 1);
+      expect(localReadResult3.getOrRaise().items.first.msg, 'Fred');
+
+      // Because our fake API doesn't filter anything (which a real API would),
+      // this should still return both despite us requesting a filter. This is
+      // because the SourceList trusts that all sources would apply a filter
+      // identically, so it does not need to verify a real ApiSource's work by
+      // running the predicate locally.
+      final localReadResult4 = await sl.getFilteredItems(
+          const ReadDetails<TestModel>(requestType: RequestType.refresh),
+          const [FieldEquals<TestModel>('msg', 'Fred')]);
+      expect(localReadResult4.getOrRaise().items.length, 2);
     });
   });
 
@@ -338,7 +377,10 @@ void main() {
 
       final localReadResult = await sl.getById(
         savedObj.id!,
-        const ReadDetails(requestType: RequestType.local, setName: 'abc'),
+        const ReadDetails<TestModel>(
+          requestType: RequestType.local,
+          setName: 'abc',
+        ),
       );
       expect(localReadResult.getOrRaise().item, savedObj);
     });

@@ -6,6 +6,7 @@ class LocalMemorySource<T extends Model> extends Source<T> {
   Map<String, Set<String>> itemSets = {globalSetName: <String>{}};
   List<String> get itemIds => items.keys.toList();
   Set<String> selectedIds = {};
+  Set<String> knownEmptySets = {};
 
   @override
   SourceType get sourceType => SourceType.local;
@@ -14,7 +15,7 @@ class LocalMemorySource<T extends Model> extends Source<T> {
   /// with the given setName in `details`. By default, [ReadDetails] uses
   /// the [globalSetName], so that will match any item stored for any reason.
   @override
-  Future<ReadResult<T>> getById(String id, ReadDetails details) {
+  Future<ReadResult<T>> getById(String id, ReadDetails<T> details) {
     T? item;
     if (!itemSets.containsKey(details.setName)) {
       item = null;
@@ -42,7 +43,7 @@ class LocalMemorySource<T extends Model> extends Source<T> {
   @override
   Future<ReadListResult<T>> getByIds(
     Set<String> ids,
-    ReadDetails details,
+    ReadDetails<T> details,
   ) async {
     assert(
       details.setName == globalSetName,
@@ -64,13 +65,16 @@ class LocalMemorySource<T extends Model> extends Source<T> {
   }
 
   @override
-  Future<ReadListResult<T>> getItems(
-    ReadDetails details, [
-    List<ReadFilter<T>> filters = const [],
-  ]) async {
-    if (!itemSets.containsKey(details.setName)) {
-      // This does not differentiate between known empty
-      // sets and brand new sets we just don't have anything for.
+  Future<ReadListResult<T>> getItems(ReadDetails<T> details) =>
+      getFilteredItems(details, const []);
+
+  @override
+  Future<ReadListResult<T>> getFilteredItems(
+    ReadDetails<T> details,
+    List<ReadFilter<T>> filters,
+  ) async {
+    if (knownEmptySets.contains(details.setName)) {
+      // TODO(craiglabenz): log this behavior
       return Right(
         ReadListSuccess<T>(
           items: [],
@@ -80,6 +84,9 @@ class LocalMemorySource<T extends Model> extends Source<T> {
         ),
       );
     }
+    if (!itemSets.containsKey(details.setName)) {
+      itemSets[details.setName] = {};
+    }
 
     // Assumes all IDs in `details.setName` have a matching object in `items`,
     // because that is the job of `setItem`.
@@ -87,7 +94,10 @@ class LocalMemorySource<T extends Model> extends Source<T> {
         itemSets[details.setName]!.map<T>((String id) => items[id]!);
 
     Iterable<T> filteredItemsIter =
-        itemsIter.where((T obj) => _passesAllFilters(obj, filters));
+        itemsIter.where((T obj) => _passesAllFilters(
+              obj,
+              filters,
+            ));
 
     return Right(
       ReadListSuccess<T>.fromList(filteredItemsIter.toList(), details, {}),
@@ -103,7 +113,7 @@ class LocalMemorySource<T extends Model> extends Source<T> {
 
   /// Returns all SelectedItems that are locally available.
   @override
-  Future<ReadListResult<T>> getSelected(ReadDetails details) async {
+  Future<ReadListResult<T>> getSelected(ReadDetails<T> details) async {
     final items = <T>[];
     final missingItemIds = <String>{};
     for (String id in selectedIds) {
@@ -135,6 +145,9 @@ class LocalMemorySource<T extends Model> extends Source<T> {
     }
     if (!itemSets.containsKey(details.setName)) {
       itemSets[details.setName] = <String>{};
+    }
+    if (knownEmptySets.contains(details.setName)) {
+      knownEmptySets.remove(details.setName);
     }
     if (!itemSets[details.setName]!.contains(item.id)) {
       itemSets[details.setName]!.add(item.id!);
