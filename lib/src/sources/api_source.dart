@@ -34,7 +34,7 @@ class ApiSource<T extends Model> extends Source<T> {
   SourceType get sourceType => SourceType.remote;
 
   @override
-  Future<ReadResult<T>> getById(String id, ReadDetails details) async {
+  Future<ReadResult<T>> getById(String id, RequestDetails<T> details) async {
     if (!loadedItems.containsKey(id) || !loadedItems[id]!.isCompleted) {
       _print('Maybe queuing Id $id');
       queueId(id);
@@ -45,13 +45,8 @@ class ApiSource<T extends Model> extends Source<T> {
   }
 
   @override
-  Future<ReadListResult<T>> getItems(ReadDetails details) =>
-      getFilteredItems(details, const []);
-
-  @override
-  Future<ReadListResult<T>> getFilteredItems(
-    ReadDetails details,
-    List<ReadFilter<T>> filters,
+  Future<ReadListResult<T>> getItems(
+    RequestDetails<T> details,
   ) async {
     final Params params = <String, String>{};
 
@@ -78,7 +73,7 @@ class ApiSource<T extends Model> extends Source<T> {
   @override
   Future<ReadListResult<T>> getByIds(
     Set<String> ids,
-    ReadDetails details,
+    RequestDetails<T> details,
   ) async {
     if (ids.isEmpty) {
       return Right(ReadListSuccess<T>.fromList([], details, {}));
@@ -114,7 +109,7 @@ class ApiSource<T extends Model> extends Source<T> {
   }
 
   @override
-  Future<ReadListResult<T>> getSelected(ReadDetails details) async {
+  Future<ReadListResult<T>> getSelected(RequestDetails<T> details) async {
     final request = ReadApiRequest(url: bindings.getSelectedItemsUrl());
     final ApiResult result = await api.get(request);
 
@@ -148,8 +143,10 @@ class ApiSource<T extends Model> extends Source<T> {
     queuedIds.forEach(idsCurrentlyBeingFetched.add);
     final Set<String> ids = Set<String>.from(queuedIds);
     queuedIds.clear();
-    final byIds =
-        await getByIds(ids, const ReadDetails(requestType: RequestType.global));
+    final byIds = await getByIds(
+      ids,
+      RequestDetails<T>(requestType: RequestType.global),
+    );
     byIds.fold(
       (ReadFailure<T> l) {
         for (final id in ids) {
@@ -185,7 +182,7 @@ class ApiSource<T extends Model> extends Source<T> {
   @override
   Future<WriteResult<T>> setItem(
     T item,
-    WriteDetails details,
+    RequestDetails<T> details,
   ) async {
     final request = WriteApiRequest(
       url: item.id == null
@@ -212,7 +209,7 @@ class ApiSource<T extends Model> extends Source<T> {
   @override
   Future<WriteListResult<T>> setItems(
     List<T> items,
-    WriteDetails details,
+    RequestDetails<T> details,
   ) =>
       throw Exception('Should never call ApiSource.setItems');
 
@@ -224,7 +221,7 @@ class ApiSource<T extends Model> extends Source<T> {
             if ((body.data['results'] as List).length != 1) {
               // TODO: log that this is even more unexpected
             }
-            final List<T> items = (body.data['results'].cast<Json>())
+            final List<T> items = ((body.data['results']! as List).cast<Json>())
                 .map<T>(bindings.fromJson)
                 .toList();
             return items.first;
@@ -253,7 +250,7 @@ class ApiSource<T extends Model> extends Source<T> {
   @override
   Future<WriteResult<T>> setSelected(
     T item,
-    WriteDetails details, {
+    RequestDetails<T> details, {
     bool isSelected = true,
   }) async {
     final request = WriteApiRequest(

@@ -56,7 +56,7 @@ class FakeSourceList<T extends Model> extends Fake implements SourceList<T> {
   @override
   Future<ReadResult<T>> getById(
     String id,
-    ReadDetails details,
+    RequestDetails<T> details,
   ) =>
       Future.value(
         Right(ReadSuccess<T>(objs.first, details: details)),
@@ -65,7 +65,7 @@ class FakeSourceList<T extends Model> extends Fake implements SourceList<T> {
   @override
   Future<ReadListResult<T>> getByIds(
     Set<String> ids,
-    ReadDetails details,
+    RequestDetails<T> details,
   ) =>
       Future.value(
         Right(
@@ -74,22 +74,15 @@ class FakeSourceList<T extends Model> extends Fake implements SourceList<T> {
       );
 
   @override
-  Future<ReadListResult<T>> getItems(ReadDetails details) =>
-      getFilteredItems(details, const []);
-
-  @override
-  Future<ReadListResult<T>> getFilteredItems(
-    ReadDetails details,
-    List<ReadFilter<T>> filters,
-  ) =>
-      Future.value(
+  Future<ReadListResult<T>> getItems(RequestDetails<T> details) => Future.value(
         Right(
           ReadListSuccess<T>.fromList([objs.first], details, {}),
         ),
       );
 
   @override
-  Future<ReadListResult<T>> getSelected(ReadDetails details) => Future.value(
+  Future<ReadListResult<T>> getSelected(RequestDetails<T> details) =>
+      Future.value(
         Future.value(
           Right(
             ReadListSuccess<T>.fromList([objs.first], details, {}),
@@ -98,10 +91,7 @@ class FakeSourceList<T extends Model> extends Fake implements SourceList<T> {
       );
 
   @override
-  Future<WriteResult<T>> setItem(
-    T item,
-    WriteDetails details,
-  ) =>
+  Future<WriteResult<T>> setItem(T item, RequestDetails<T> details) =>
       Future.value(
         Right(
           WriteSuccess<T>(objs.first, details: details),
@@ -111,7 +101,7 @@ class FakeSourceList<T extends Model> extends Fake implements SourceList<T> {
   @override
   Future<WriteListResult<T>> setItems(
     List<T> items,
-    WriteDetails details,
+    RequestDetails<T> details,
   ) =>
       Future.value(
         Right(
@@ -122,7 +112,7 @@ class FakeSourceList<T extends Model> extends Fake implements SourceList<T> {
   @override
   Future<WriteResult<T>> setSelected(
     T item,
-    WriteDetails details, {
+    RequestDetails<T> details, {
     bool isSelected = true,
   }) =>
       Future.value(

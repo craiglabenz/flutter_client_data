@@ -12,7 +12,7 @@ part 'results.freezed.dart';
 
 @Freezed()
 class WriteSuccess<T extends Model> with _$WriteSuccess<T> {
-  const factory WriteSuccess(T item, {required WriteDetails details}) =
+  const factory WriteSuccess(T item, {required RequestDetails<T> details}) =
       _WriteSuccess;
 }
 
@@ -20,7 +20,7 @@ class WriteSuccess<T extends Model> with _$WriteSuccess<T> {
 class BulkWriteSuccess<T extends Model> with _$BulkWriteSuccess<T> {
   const factory BulkWriteSuccess(
     List<T> items, {
-    required WriteDetails details,
+    required RequestDetails<T> details,
   }) = _BulkWriteSuccess;
 }
 
@@ -59,7 +59,7 @@ typedef WriteListResult<T extends Model> = //
 class ReadSuccess<T extends Model> with _$ReadSuccess<T> {
   const factory ReadSuccess(
     T? item, {
-    required ReadDetails details,
+    required RequestDetails<T> details,
   }) = _ReadSuccess;
 }
 
@@ -70,13 +70,13 @@ class ReadListSuccess<T extends Model> with _$ReadListSuccess<T> {
     required List<T> items,
     required Map<String, T> itemsMap,
     required Set<String> missingItemIds,
-    required ReadDetails details,
+    required RequestDetails<T> details,
   }) = _ReadListSuccess;
 
   /// Map-friendly constructor.
   factory ReadListSuccess.fromMap(
     Map<String, T> map,
-    ReadDetails details,
+    RequestDetails<T> details,
     Set<String> missingItemIds,
   ) =>
       ReadListSuccess(
@@ -89,7 +89,7 @@ class ReadListSuccess<T extends Model> with _$ReadListSuccess<T> {
   /// List-friendly constructor.
   factory ReadListSuccess.fromList(
     List<T> items,
-    ReadDetails details,
+    RequestDetails<T> details,
     Set<String> missingItemIds,
   ) {
     final map = <String, T>{};

@@ -4,33 +4,28 @@ abstract class DataContract<T extends Model> {
   // Getters.
   Future<ReadResult<T>> getById(
     String id,
-    ReadDetails<T> details,
+    RequestDetails<T> details,
   );
   Future<ReadListResult<T>> getByIds(
     Set<String> ids,
-    ReadDetails<T> details,
+    RequestDetails<T> details,
   );
-  Future<ReadListResult<T>> getSelected(ReadDetails<T> details);
+  Future<ReadListResult<T>> getSelected(RequestDetails<T> details);
 
-  Future<ReadListResult<T>> getItems(ReadDetails<T> details);
-
-  Future<ReadListResult<T>> getFilteredItems(
-    ReadDetails<T> details,
-    List<ReadFilter<T>> filters,
-  );
+  Future<ReadListResult<T>> getItems(RequestDetails<T> details);
 
   // Setters.
   Future<WriteResult<T>> setItem(
     T item,
-    WriteDetails details,
+    RequestDetails<T> details,
   );
   Future<WriteListResult<T>> setItems(
     List<T> items,
-    WriteDetails details,
+    RequestDetails<T> details,
   );
   Future<WriteResult<T>> setSelected(
     T item,
-    WriteDetails details, {
+    RequestDetails<T> details, {
     bool isSelected = true,
   });
 }

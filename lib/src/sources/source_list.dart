@@ -6,7 +6,7 @@ import 'package:client_data/client_data.dart';
 /// Sources that originally fail to yield and object have it cached if a
 /// fallback source is able to yield it.
 ///
-/// The [RequestType] parameter on [WriteDetails] and [GetDetails] can be used to
+/// The [RequestType] parameter on [RequestDetails<T>] and [GetDetails] can be used to
 /// control which sources are asked, which is helpful when you want to refresh
 /// data.
 class SourceList<T extends Model> extends DataContract<T> {
@@ -38,7 +38,7 @@ class SourceList<T extends Model> extends DataContract<T> {
   Future<void> _cacheItem(
     T item,
     List<Source> emptySources,
-    WriteDetails details,
+    RequestDetails<T> details,
   ) async {
     for (final source in emptySources) {
       await source.setItem(item, details);
@@ -48,7 +48,7 @@ class SourceList<T extends Model> extends DataContract<T> {
   Future<void> _cacheItems(
     List<T> items,
     List<Source> emptySources,
-    WriteDetails details, [
+    RequestDetails<T> details, [
     bool? isSelected,
   ]) async {
     for (final source in emptySources) {
@@ -63,7 +63,7 @@ class SourceList<T extends Model> extends DataContract<T> {
   }
 
   @override
-  Future<ReadResult<T>> getById(String id, ReadDetails<T> details) async {
+  Future<ReadResult<T>> getById(String id, RequestDetails<T> details) async {
     final emptySources = <Source<T>>[];
     for (final matchedSource in getSources(requestType: details.requestType)) {
       if (matchedSource.unmatched) {
@@ -79,11 +79,7 @@ class SourceList<T extends Model> extends DataContract<T> {
 
       final maybeItem = sourceResult.getOrRaise().item;
       if (maybeItem != null) {
-        await _cacheItem(
-          maybeItem,
-          emptySources,
-          details.toWriteDetails(),
-        );
+        await _cacheItem(maybeItem, emptySources, details);
         return sourceResult;
       }
       emptySources.add(source);
@@ -94,13 +90,9 @@ class SourceList<T extends Model> extends DataContract<T> {
   @override
   Future<ReadListResult<T>> getByIds(
     Set<String> ids,
-    ReadDetails<T> details,
+    RequestDetails<T> details,
   ) async {
-    assert(
-      details.setName == globalSetName,
-      'Must not supply a setName to getByIds',
-    );
-
+    details.assertEmpty('getByIds');
     final items = <String, T>{};
     final pastSources = <Source>[];
     final backfillMap = <Source, Set<T>>{};
@@ -148,25 +140,16 @@ class SourceList<T extends Model> extends DataContract<T> {
       if (backfillMap[pastSource]!.isNotEmpty) {
         await pastSource.setItems(
           backfillMap[pastSource]!.toList(),
-          WriteDetails(requestType: details.requestType),
+          RequestDetails<T>(requestType: details.requestType),
         );
       }
     }
 
-    return Right(
-      ReadListSuccess<T>.fromMap(items, details, missingIds),
-    );
+    return Right(ReadListSuccess<T>.fromMap(items, details, missingIds));
   }
 
   @override
-  Future<ReadListResult<T>> getItems(ReadDetails<T> details) =>
-      getFilteredItems(details, const []);
-
-  @override
-  Future<ReadListResult<T>> getFilteredItems(
-    ReadDetails<T> details,
-    List<ReadFilter<T>> filters,
-  ) async {
+  Future<ReadListResult<T>> getItems(RequestDetails<T> details) async {
     final emptySources = <Source>[];
     for (final matchedSource in getSources(requestType: details.requestType)) {
       if (matchedSource.unmatched) {
@@ -174,10 +157,7 @@ class SourceList<T extends Model> extends DataContract<T> {
         continue;
       }
 
-      final sourceResult = await matchedSource.source.getFilteredItems(
-        details,
-        filters,
-      );
+      final sourceResult = await matchedSource.source.getItems(details);
 
       if (sourceResult.isLeft()) {
         return sourceResult;
@@ -185,11 +165,7 @@ class SourceList<T extends Model> extends DataContract<T> {
 
       List<T> items = sourceResult.getOrRaise().items;
       if (items.isNotEmpty) {
-        await _cacheItems(
-          items,
-          emptySources,
-          details.toWriteDetails(),
-        );
+        await _cacheItems(items, emptySources, details);
         return Right(ReadListSuccess<T>.fromList(items, details, {}));
       } else {
         emptySources.add(matchedSource.source);
@@ -199,11 +175,8 @@ class SourceList<T extends Model> extends DataContract<T> {
   }
 
   @override
-  Future<ReadListResult<T>> getSelected(ReadDetails<T> details) async {
-    assert(
-      details.setName == globalSetName,
-      'Must not supply a setName to getSelected',
-    );
+  Future<ReadListResult<T>> getSelected(RequestDetails<T> details) async {
+    details.assertEmpty('getSelected');
     final emptySources = <Source>[];
     for (final matchedSource in getSources(requestType: details.requestType)) {
       if (matchedSource.unmatched) {
@@ -217,12 +190,7 @@ class SourceList<T extends Model> extends DataContract<T> {
       }
       List<T> items = sourceResult.getOrRaise().items;
       if (items.isNotEmpty) {
-        await _cacheItems(
-          items,
-          emptySources,
-          details.toWriteDetails(),
-          true,
-        );
+        await _cacheItems(items, emptySources, details, true);
         return Right(ReadListSuccess<T>.fromList(items, details, {}));
       } else {
         emptySources.add(matchedSource.source);
@@ -232,7 +200,7 @@ class SourceList<T extends Model> extends DataContract<T> {
   }
 
   @override
-  Future<WriteResult<T>> setItem(T item, WriteDetails details) async {
+  Future<WriteResult<T>> setItem(T item, RequestDetails<T> details) async {
     // T _item = item;
     for (final ms in getSources(
       requestType: details.requestType,
@@ -263,7 +231,7 @@ class SourceList<T extends Model> extends DataContract<T> {
   @override
   Future<WriteListResult<T>> setItems(
     List<T> items,
-    WriteDetails details,
+    RequestDetails<T> details,
   ) async {
     assert(details.requestType == RequestType.local,
         'setItems is a local-only method');
@@ -278,7 +246,7 @@ class SourceList<T extends Model> extends DataContract<T> {
   }
 
   @override
-  Future<WriteResult<T>> setSelected(T item, WriteDetails details,
+  Future<WriteResult<T>> setSelected(T item, RequestDetails<T> details,
       {bool isSelected = true}) async {
     assert(item.id != null, 'Can only mark saved items as selected');
     for (final ms in getSources(requestType: details.requestType)) {

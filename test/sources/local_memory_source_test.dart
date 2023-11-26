@@ -2,10 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:client_data/client_data.dart';
 import 'test_model.dart';
 
-const readDetails = ReadDetails<TestModel>();
-const abcReadDetails = ReadDetails<TestModel>(setName: 'abc');
-const writeDetails = WriteDetails();
-const abcWriteDetails = WriteDetails(setName: 'abc');
+final details = RequestDetails<TestModel>();
+final abcDetails = RequestDetails<TestModel>(
+  filters: const [MsgStartsWithFilter('abc')],
+);
+final abcDetailsNoOverwrite = RequestDetails<TestModel>(
+  filters: const [MsgStartsWithFilter('abc')],
+  shouldOverwrite: false,
+);
 
 void main() {
   late LocalMemorySource<TestModel> mem;
@@ -17,20 +21,20 @@ void main() {
 
     test('save items', () {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, writeDetails);
+      mem.setItem(item, details);
       fullyContains(mem, item);
 
       const item2 = TestModel(id: 'item 2');
-      mem.setItem(item2, const WriteDetails(setName: 'abc'));
-      fullyContains(mem, item2, setNames: ['abc']);
+      mem.setItem(item2, abcDetails);
+      fullyContains(mem, item2, cacheKeys: [abcDetails.cacheKey]);
     });
 
     test('accept items twice', () {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, writeDetails);
+      mem.setItem(item, details);
       fullyContains(mem, item);
 
-      mem.setItem(item, writeDetails);
+      mem.setItem(item, details);
       fullyContains(mem, item);
 
       expect(mem.itemIds.length, equals(1));
@@ -38,22 +42,22 @@ void main() {
 
     test('overwrite', () {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, writeDetails);
+      mem.setItem(item, details);
       fullyContains(mem, item);
 
       const itemTake2 = TestModel(id: 'item 1', msg: 'different');
-      mem.setItem(itemTake2, writeDetails);
+      mem.setItem(itemTake2, details);
       fullyContains(mem, itemTake2);
       expect(mem.itemIds.length, equals(1));
     });
 
     test('honor overwrite=False', () {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, writeDetails);
+      mem.setItem(item, details);
       fullyContains(mem, item);
 
       const itemTake2 = TestModel(id: 'item 1', msg: 'different');
-      mem.setItem(itemTake2, const WriteDetails(shouldOverwrite: false));
+      mem.setItem(itemTake2, RequestDetails(shouldOverwrite: false));
       fullyContains(mem, item);
       expect(mem.itemIds.length, equals(1));
     });
@@ -67,12 +71,12 @@ void main() {
     test('set items', () {
       const item = TestModel(id: 'item 1');
       const item2 = TestModel(id: 'item 2');
-      mem.setItems([item, item2], writeDetails);
+      mem.setItems([item, item2], details);
       fullyContains(mem, item);
       fullyContains(mem, item2);
 
       const item3 = TestModel(id: 'item 3');
-      mem.setItems([item2, item3], writeDetails);
+      mem.setItems([item2, item3], details);
       fullyContains(mem, item);
       fullyContains(mem, item2);
       fullyContains(mem, item3);
@@ -82,15 +86,15 @@ void main() {
     test('set items with set name', () {
       const item = TestModel(id: 'item 1');
       const item2 = TestModel(id: 'item 2');
-      mem.setItems([item, item2], writeDetails);
+      mem.setItems([item, item2], details);
       fullyContains(mem, item);
       fullyContains(mem, item2);
 
       const item3 = TestModel(id: 'item 3');
-      mem.setItems([item2, item3], const WriteDetails(setName: 'abc'));
+      mem.setItems([item2, item3], abcDetails);
       fullyContains(mem, item);
-      fullyContains(mem, item2, setNames: ['abc']);
-      fullyContains(mem, item3, setNames: ['abc']);
+      fullyContains(mem, item2, cacheKeys: [abcDetails.cacheKey]);
+      fullyContains(mem, item3, cacheKeys: [abcDetails.cacheKey]);
       expect(mem.itemIds.length, 3);
     });
   });
@@ -102,88 +106,87 @@ void main() {
 
     test('set new items', () {
       const item = TestModel(id: 'item 1');
-      mem.setSelected(item, writeDetails);
+      mem.setSelected(item, details);
       fullyContains(mem, item, isSelected: true);
     });
 
     test('set known items', () {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, writeDetails);
+      mem.setItem(item, details);
       fullyContains(mem, item);
-      mem.setSelected(item, writeDetails);
+      mem.setSelected(item, details);
       fullyContains(mem, item, isSelected: true);
     });
 
     test('set new items with set name', () {
       const item = TestModel(id: 'item 1');
-      mem.setSelected(item, const WriteDetails(setName: 'abc'));
-      fullyContains(mem, item, setNames: ['abc'], isSelected: true);
+      mem.setSelected(item, abcDetails);
+      fullyContains(mem, item,
+          cacheKeys: [abcDetails.cacheKey], isSelected: true);
     });
 
     test('set known items with set name', () {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, writeDetails);
+      mem.setItem(item, details);
       fullyContains(mem, item);
-      mem.setSelected(item, const WriteDetails(setName: 'abc'));
-      fullyContains(mem, item, setNames: ['abc'], isSelected: true);
+      mem.setSelected(item, abcDetails);
+      fullyContains(mem, item,
+          cacheKeys: [abcDetails.cacheKey], isSelected: true);
     });
 
     test('set known items with set name but no overwrite', () {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, writeDetails);
+      mem.setItem(item, details);
       fullyContains(mem, item);
-      mem.setSelected(
-        item,
-        const WriteDetails(setName: 'abc', shouldOverwrite: false),
-      );
-      fullyContains(mem, item, setNames: ['abc'], isSelected: true);
+      mem.setSelected(item, abcDetailsNoOverwrite);
+      fullyContains(mem, item,
+          cacheKeys: [abcDetails.cacheKey], isSelected: true);
     });
 
     test('set known items with new values and set name but no overwrite', () {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, writeDetails);
+      mem.setItem(item, details);
       fullyContains(mem, item);
 
       const itemTake2 = TestModel(id: 'item 1', msg: 'different');
-      mem.setSelected(
-        itemTake2,
-        const WriteDetails(setName: 'abc', shouldOverwrite: false),
-      );
-      fullyContains(mem, item, setNames: ['abc'], isSelected: true);
+      mem.setSelected(itemTake2, abcDetailsNoOverwrite);
+      fullyContains(mem, item,
+          cacheKeys: [abcDetails.cacheKey], isSelected: true);
     });
 
     test('set known items with new values and set name', () {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, writeDetails);
+      mem.setItem(item, details);
       fullyContains(mem, item);
 
       const itemTake2 = TestModel(id: 'item 1', msg: 'different');
-      mem.setSelected(itemTake2, const WriteDetails(setName: 'abc'));
-      fullyContains(mem, itemTake2, setNames: ['abc'], isSelected: true);
+      mem.setSelected(itemTake2, abcDetails);
+      fullyContains(mem, itemTake2,
+          cacheKeys: [abcDetails.cacheKey], isSelected: true);
     });
 
     test('set new item with first selected value as false', () {
       const item = TestModel(id: 'item 1');
-      mem.setSelected(item, writeDetails, isSelected: false);
+      mem.setSelected(item, details, isSelected: false);
       fullyContains(mem, item);
     });
 
     test('set known item with changes', () {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, writeDetails);
+      mem.setItem(item, details);
       const itemTake2 = TestModel(id: 'item 1', msg: 'different');
-      mem.setSelected(itemTake2, writeDetails, isSelected: false);
+      mem.setSelected(itemTake2, details, isSelected: false);
       fullyContains(mem, itemTake2);
 
-      mem.setSelected(itemTake2, writeDetails, isSelected: true);
+      mem.setSelected(itemTake2, details, isSelected: true);
       fullyContains(mem, itemTake2, isSelected: true);
     });
 
     test('remove set items', () {
       const item = TestModel(id: 'item 1');
-      mem.setSelected(item, writeDetails, isSelected: true);
+      mem.setSelected(item, details, isSelected: true);
       fullyContains(mem, item, isSelected: true);
-      mem.setSelected(item, writeDetails, isSelected: false);
+      mem.setSelected(item, details, isSelected: false);
       fullyContains(mem, item);
     });
   });
@@ -195,38 +198,32 @@ void main() {
 
     test('return known items', () async {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, writeDetails);
-      final maybeResult = await mem.getById(item.id!, readDetails);
+      mem.setItem(item, details);
+      final maybeResult = await mem.getById(item.id!, details);
       expect(maybeResult, isRight);
       expect(maybeResult.getOrRaise().item, equals(item));
     });
 
     test('return empty ReadSuccess for unknown items', () async {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, writeDetails);
+      mem.setItem(item, details);
 
       const item2 = TestModel(id: 'item 2');
 
-      final retrievedItem = await mem.getById(item2.id!, readDetails);
+      final retrievedItem = await mem.getById(item2.id!, details);
       expect(retrievedItem, isRight);
       expect(retrievedItem.getOrRaise().item, isNull);
     });
 
     test('honor setName', () async {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, writeDetails);
-      final retrievedItem = await mem.getById(
-        item.id!,
-        const ReadDetails<TestModel>(setName: 'abc'),
-      );
+      mem.setItem(item, details);
+      final retrievedItem = await mem.getById(item.id!, abcDetails);
       expect(retrievedItem, isRight);
       expect(retrievedItem.getOrRaise().item, isNull);
 
-      mem.setItem(item, const WriteDetails(setName: 'abc'));
-      final retrievedItem2 = await mem.getById(
-        item.id!,
-        const ReadDetails<TestModel>(setName: 'abc'),
-      );
+      mem.setItem(item, abcDetails);
+      final retrievedItem2 = await mem.getById(item.id!, abcDetails);
       expect(retrievedItem2, isRight);
       expect(retrievedItem2.getOrRaise().item, item);
     });
@@ -240,25 +237,25 @@ void main() {
     });
 
     test('return items', () async {
-      mem.setItems([item, item2], writeDetails);
+      mem.setItems([item, item2], details);
       final maybeResult = await mem.getByIds(
         {item.id!, item2.id!},
-        readDetails,
+        details,
       );
       expect(maybeResult.isRight(), true);
       final result = maybeResult.getOrRaise();
       expect(
         result,
-        ReadListSuccess<TestModel>.fromList([item, item2], readDetails, {}),
+        ReadListSuccess<TestModel>.fromList([item, item2], details, {}),
       );
     });
 
     test('return items for partial hits', () async {
       const item3 = TestModel(id: 'item 3');
-      mem.setItems([item, item2], writeDetails);
+      mem.setItems([item, item2], details);
       final maybeResult = await mem.getByIds(
         {item.id!, item2.id!, item3.id!},
-        readDetails,
+        details,
       );
       expect(maybeResult.isRight(), true);
       final result = maybeResult.getOrRaise();
@@ -266,7 +263,7 @@ void main() {
         result,
         ReadListSuccess<TestModel>.fromList(
           [item, item2],
-          readDetails,
+          details,
           {item3.id!},
         ),
       );
@@ -280,88 +277,88 @@ void main() {
       mem = LocalMemorySource<TestModel>();
     });
     test('return items', () async {
-      mem.setItems([item, item2], writeDetails);
-      final maybeResult = await mem.getItems(readDetails);
+      mem.setItems([item, item2], details);
+      final maybeResult = await mem.getItems(details);
       final result = maybeResult.getOrRaise();
       expect(
         result,
-        ReadListSuccess<TestModel>.fromList([item, item2], readDetails, {}),
+        ReadListSuccess<TestModel>.fromList([item, item2], details, {}),
       );
     });
 
     test('return no items from setName if empty', () async {
-      mem.setItems([item, item2], const WriteDetails(setName: 'abc'));
+      mem.setItems([item, item2], abcDetails);
 
-      final maybeResult = await mem.getItems(
-        const ReadDetails<TestModel>(setName: 'xyz'),
+      final xyzDetails = RequestDetails<TestModel>(
+        filters: const [MsgStartsWithFilter('xyz')],
       );
+      final maybeResult = await mem.getItems(xyzDetails);
       expect(maybeResult, isRight);
       final result = maybeResult.getOrRaise();
       expect(result.items, isEmpty);
-      expect(result.details.setName, 'xyz');
       expect(result.itemsMap, isEmpty);
       expect(result.missingItemIds, isEmpty);
-      expect(result.details.pagination, isNull);
-      expect(result.details, const ReadDetails<TestModel>(setName: 'xyz'));
+      // expect(result.details.pagination, isNull);
+      expect(result.details, xyzDetails);
 
       // But globalSetName still returns
-      final maybeResult2 = await mem.getItems(readDetails);
+      final maybeResult2 = await mem.getItems(details);
       final result2 = maybeResult2.getOrRaise();
       expect(
         result2,
-        ReadListSuccess<TestModel>.fromList([item, item2], readDetails, {}),
+        ReadListSuccess<TestModel>.fromList([item, item2], details, {}),
       );
     });
 
     test('return no items from custom setName if empty', () async {
-      mem.setItems([item, item2], writeDetails);
-      final maybeResult = await mem.getItems(abcReadDetails);
+      mem.setItems([item, item2], details);
+      final maybeResult = await mem.getItems(abcDetails);
       expect(maybeResult, isRight);
       final result = maybeResult.getOrRaise();
       expect(
         result,
         ReadListSuccess<TestModel>.fromList(
           [],
-          abcReadDetails,
+          abcDetails,
           {},
         ),
       );
     });
 
-    test('return only items from set name', () async {
-      mem.setItems([item, item2], writeDetails);
-
-      const item3 = TestModel(id: 'item 3');
-      mem.setItems([item2, item3], abcWriteDetails);
-
-      final maybeResult = await mem.getItems(abcReadDetails);
-      final result = maybeResult.getOrRaise();
-      expect(
-        result,
-        ReadListSuccess<TestModel>.fromList([item2, item3], abcReadDetails, {}),
-      );
-    });
-
     test('honor filters', () async {
       const item3 = TestModel(id: 'item 3', msg: 'holy moly');
-      mem.setItems([item, item2, item3], writeDetails);
-      final maybeResult = await mem.getFilteredItems(
-        readDetails,
-        [const MsgStartsWithFilter('holy')],
+      mem.setItems([item, item2, item3], details);
+      final holyDetails = RequestDetails<TestModel>(
+        filters: const [MsgStartsWithFilter('holy')],
       );
+      final maybeResult = await mem.getItems(holyDetails);
       final result = maybeResult.getOrRaise();
       expect(result,
-          ReadListSuccess<TestModel>.fromList([item3], readDetails, {}));
+          ReadListSuccess<TestModel>.fromList([item3], holyDetails, {}));
     });
 
     test('return items', () async {
-      mem.setItems([item, item2], writeDetails);
-      final maybeResult = await mem.getItems(readDetails);
+      mem.setItems([item, item2], details);
+      final maybeResult = await mem.getItems(details);
       final result = maybeResult.getOrRaise();
       expect(
         result,
-        ReadListSuccess<TestModel>.fromList([item, item2], readDetails, {}),
+        ReadListSuccess<TestModel>.fromList([item, item2], details, {}),
       );
+    });
+
+    test('return items that satisfy a previously unseen request', () async {
+      const asdf = TestModel(id: 'item 1', msg: 'asdf');
+      const xyz = TestModel(id: 'item 2', msg: 'xyz');
+
+      mem.setItems([asdf, xyz], details);
+      final deets = RequestDetails<TestModel>(
+        filters: const [MsgStartsWithFilter('asdf')],
+      );
+      final maybeResult = await mem.getItems(deets);
+      final result = maybeResult.getOrRaise();
+      expect(result.items, hasLength(1));
+      expect(result.items.first.msg, 'asdf');
     });
   });
 
@@ -373,31 +370,81 @@ void main() {
     });
 
     test('return selected items', () async {
-      mem.setItem(item, writeDetails);
-      mem.setSelected(item2, writeDetails);
-      final maybeResult = await mem.getSelected(readDetails);
+      mem.setItem(item, details);
+      mem.setSelected(item2, details);
+      final maybeResult = await mem.getSelected(details);
       final result = maybeResult.getOrRaise();
       expect(
         result,
-        ReadListSuccess<TestModel>.fromList([item2], readDetails, {}),
+        ReadListSuccess<TestModel>.fromList([item2], details, {}),
       );
     });
 
     test('return selected items from setName', () async {
-      mem.setItem(item, writeDetails);
-      mem.setSelected(item2, writeDetails);
+      mem.setItem(item, details);
+      mem.setSelected(item2, details);
 
       const item3 = TestModel(id: 'item 3');
-      mem.setSelected(item3, const WriteDetails(setName: 'setName'));
-
-      const localReadDetails = ReadDetails<TestModel>(setName: 'setName');
-      final maybeResult = await mem.getSelected(
-        localReadDetails,
+      final setNameDetails = RequestDetails<TestModel>(
+        filters: const [MsgStartsWithFilter('setName')],
       );
+      mem.setSelected(item3, setNameDetails);
+
+      final maybeResult = await mem.getSelected(setNameDetails);
       final result = maybeResult.getOrRaise();
       expect(
         result,
-        ReadListSuccess<TestModel>.fromList([item3], localReadDetails, {}),
+        ReadListSuccess<TestModel>.fromList([item3], setNameDetails, {}),
+      );
+    });
+  });
+
+  group('LocalMemorySource.requestCache should', () {
+    const item = TestModel(id: 'item 1');
+    const item2 = TestModel(id: 'item 2');
+    setUp(() {
+      mem = LocalMemorySource<TestModel>();
+    });
+    test('contain saved objects', () {
+      mem.setItems([item, item2], details);
+      expect(mem.requestCache, contains(details.cacheKey));
+      expect(
+        mem.requestCache[details.cacheKey],
+        containsAll([item.id, item2.id]),
+      );
+    });
+    test('contain saved objects with filters', () {
+      final detailsWithFilter = RequestDetails<TestModel>(
+        filters: const [MsgStartsWithFilter('asdf')],
+      );
+      mem.setItems([item, item2], detailsWithFilter);
+      expect(mem.requestCache, contains(details.cacheKey));
+      expect(mem.requestCache, contains(detailsWithFilter.cacheKey));
+      expect(
+        mem.requestCache[details.cacheKey],
+        containsAll([item.id, item2.id]),
+      );
+      expect(
+        mem.requestCache[detailsWithFilter.cacheKey],
+        containsAll([item.id, item2.id]),
+      );
+    });
+
+    test('contain saved objects with filters after writing w no filters', () {
+      mem.setItems([item, item2], details);
+      final detailsWithFilter = RequestDetails<TestModel>(
+        filters: const [MsgStartsWithFilter('asdf')],
+      );
+      mem.setItems([item, item2], detailsWithFilter);
+      expect(mem.requestCache, contains(details.cacheKey));
+      expect(mem.requestCache, contains(detailsWithFilter.cacheKey));
+      expect(
+        mem.requestCache[details.cacheKey],
+        containsAll([item.id, item2.id]),
+      );
+      expect(
+        mem.requestCache[detailsWithFilter.cacheKey],
+        containsAll([item.id, item2.id]),
       );
     });
   });
@@ -406,16 +453,18 @@ void main() {
 void fullyContains(
   LocalMemorySource<TestModel> mem,
   TestModel item, {
-  List<String> setNames = const [],
+  List<int> cacheKeys = const [],
   bool isSelected = false,
 }) {
-  expect(mem.itemIds.contains(item.id!), true);
+  expect(mem.itemIds, contains(item.id!));
   expect(mem.items.containsKey(item.id!), true);
-  expect(mem.itemSets.containsKey(globalSetName), true);
-  expect(mem.itemSets[globalSetName]!.contains(item.id), true);
-  for (String setName in setNames) {
-    expect(mem.itemSets.containsKey(setName), true);
-    expect(mem.itemSets[setName]!.contains(item.id), true);
+  expect(
+    mem.requestCache[RequestDetails<TestModel>().cacheKey]!,
+    contains(item.id),
+  );
+  for (int setName in cacheKeys) {
+    expect(mem.requestCache.containsKey(setName), true);
+    expect(mem.requestCache[setName]!, contains(item.id));
   }
   expect(mem.items[item.id!]!.msg, item.msg);
   expect(mem.selectedIds.contains(item.id!), isSelected);

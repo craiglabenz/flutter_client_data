@@ -19,21 +19,21 @@ mixin _$ApiResultBody {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String html) html,
-    required TResult Function(Map<String, dynamic> data) json,
+    required TResult Function(Map<String, Object?> data) json,
     required TResult Function(String text) plainText,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String html)? html,
-    TResult? Function(Map<String, dynamic> data)? json,
+    TResult? Function(Map<String, Object?> data)? json,
     TResult? Function(String text)? plainText,
   }) =>
       throw _privateConstructorUsedError;
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String html)? html,
-    TResult Function(Map<String, dynamic> data)? json,
+    TResult Function(Map<String, Object?> data)? json,
     TResult Function(String text)? plainText,
     required TResult orElse(),
   }) =>
@@ -146,7 +146,7 @@ class _$HtmlApiResultBodyImpl implements HtmlApiResultBody {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String html) html,
-    required TResult Function(Map<String, dynamic> data) json,
+    required TResult Function(Map<String, Object?> data) json,
     required TResult Function(String text) plainText,
   }) {
     return html(this.html);
@@ -156,7 +156,7 @@ class _$HtmlApiResultBodyImpl implements HtmlApiResultBody {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String html)? html,
-    TResult? Function(Map<String, dynamic> data)? json,
+    TResult? Function(Map<String, Object?> data)? json,
     TResult? Function(String text)? plainText,
   }) {
     return html?.call(this.html);
@@ -166,7 +166,7 @@ class _$HtmlApiResultBodyImpl implements HtmlApiResultBody {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String html)? html,
-    TResult Function(Map<String, dynamic> data)? json,
+    TResult Function(Map<String, Object?> data)? json,
     TResult Function(String text)? plainText,
     required TResult orElse(),
   }) {
@@ -226,7 +226,7 @@ abstract class _$$JsonApiResultBodyImplCopyWith<$Res> {
           $Res Function(_$JsonApiResultBodyImpl) then) =
       __$$JsonApiResultBodyImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({Map<String, dynamic> data});
+  $Res call({Map<String, Object?> data});
 }
 
 /// @nodoc
@@ -246,7 +246,7 @@ class __$$JsonApiResultBodyImplCopyWithImpl<$Res>
       null == data
           ? _value._data
           : data // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>,
+              as Map<String, Object?>,
     ));
   }
 }
@@ -254,11 +254,11 @@ class __$$JsonApiResultBodyImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$JsonApiResultBodyImpl implements JsonApiResultBody {
-  const _$JsonApiResultBodyImpl(final Map<String, dynamic> data) : _data = data;
+  const _$JsonApiResultBodyImpl(final Map<String, Object?> data) : _data = data;
 
-  final Map<String, dynamic> _data;
+  final Map<String, Object?> _data;
   @override
-  Map<String, dynamic> get data {
+  Map<String, Object?> get data {
     if (_data is EqualUnmodifiableMapView) return _data;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableMapView(_data);
@@ -292,7 +292,7 @@ class _$JsonApiResultBodyImpl implements JsonApiResultBody {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String html) html,
-    required TResult Function(Map<String, dynamic> data) json,
+    required TResult Function(Map<String, Object?> data) json,
     required TResult Function(String text) plainText,
   }) {
     return json(data);
@@ -302,7 +302,7 @@ class _$JsonApiResultBodyImpl implements JsonApiResultBody {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String html)? html,
-    TResult? Function(Map<String, dynamic> data)? json,
+    TResult? Function(Map<String, Object?> data)? json,
     TResult? Function(String text)? plainText,
   }) {
     return json?.call(data);
@@ -312,7 +312,7 @@ class _$JsonApiResultBodyImpl implements JsonApiResultBody {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String html)? html,
-    TResult Function(Map<String, dynamic> data)? json,
+    TResult Function(Map<String, Object?> data)? json,
     TResult Function(String text)? plainText,
     required TResult orElse(),
   }) {
@@ -358,10 +358,10 @@ class _$JsonApiResultBodyImpl implements JsonApiResultBody {
 }
 
 abstract class JsonApiResultBody implements ApiResultBody {
-  const factory JsonApiResultBody(final Map<String, dynamic> data) =
+  const factory JsonApiResultBody(final Map<String, Object?> data) =
       _$JsonApiResultBodyImpl;
 
-  Map<String, dynamic> get data;
+  Map<String, Object?> get data;
   @JsonKey(ignore: true)
   _$$JsonApiResultBodyImplCopyWith<_$JsonApiResultBodyImpl> get copyWith =>
       throw _privateConstructorUsedError;
@@ -435,7 +435,7 @@ class _$PlainTextApiResultBodyImpl implements PlainTextApiResultBody {
   @optionalTypeArgs
   TResult when<TResult extends Object?>({
     required TResult Function(String html) html,
-    required TResult Function(Map<String, dynamic> data) json,
+    required TResult Function(Map<String, Object?> data) json,
     required TResult Function(String text) plainText,
   }) {
     return plainText(text);
@@ -445,7 +445,7 @@ class _$PlainTextApiResultBodyImpl implements PlainTextApiResultBody {
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function(String html)? html,
-    TResult? Function(Map<String, dynamic> data)? json,
+    TResult? Function(Map<String, Object?> data)? json,
     TResult? Function(String text)? plainText,
   }) {
     return plainText?.call(text);
@@ -455,7 +455,7 @@ class _$PlainTextApiResultBodyImpl implements PlainTextApiResultBody {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>({
     TResult Function(String html)? html,
-    TResult Function(Map<String, dynamic> data)? json,
+    TResult Function(Map<String, Object?> data)? json,
     TResult Function(String text)? plainText,
     required TResult orElse(),
   }) {

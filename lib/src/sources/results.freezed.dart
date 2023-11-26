@@ -17,7 +17,7 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$WriteSuccess<T extends Model> {
   T get item => throw _privateConstructorUsedError;
-  WriteDetails get details => throw _privateConstructorUsedError;
+  RequestDetails<T> get details => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $WriteSuccessCopyWith<T, WriteSuccess<T>> get copyWith =>
@@ -30,7 +30,7 @@ abstract class $WriteSuccessCopyWith<T extends Model, $Res> {
           WriteSuccess<T> value, $Res Function(WriteSuccess<T>) then) =
       _$WriteSuccessCopyWithImpl<T, $Res, WriteSuccess<T>>;
   @useResult
-  $Res call({T item, WriteDetails details});
+  $Res call({T item, RequestDetails<T> details});
 }
 
 /// @nodoc
@@ -57,7 +57,7 @@ class _$WriteSuccessCopyWithImpl<T extends Model, $Res,
       details: null == details
           ? _value.details
           : details // ignore: cast_nullable_to_non_nullable
-              as WriteDetails,
+              as RequestDetails<T>,
     ) as $Val);
   }
 }
@@ -70,7 +70,7 @@ abstract class _$$WriteSuccessImplCopyWith<T extends Model, $Res>
       __$$WriteSuccessImplCopyWithImpl<T, $Res>;
   @override
   @useResult
-  $Res call({T item, WriteDetails details});
+  $Res call({T item, RequestDetails<T> details});
 }
 
 /// @nodoc
@@ -95,7 +95,7 @@ class __$$WriteSuccessImplCopyWithImpl<T extends Model, $Res>
       details: null == details
           ? _value.details
           : details // ignore: cast_nullable_to_non_nullable
-              as WriteDetails,
+              as RequestDetails<T>,
     ));
   }
 }
@@ -108,7 +108,7 @@ class _$WriteSuccessImpl<T extends Model> implements _WriteSuccess<T> {
   @override
   final T item;
   @override
-  final WriteDetails details;
+  final RequestDetails<T> details;
 
   @override
   String toString() {
@@ -138,12 +138,12 @@ class _$WriteSuccessImpl<T extends Model> implements _WriteSuccess<T> {
 
 abstract class _WriteSuccess<T extends Model> implements WriteSuccess<T> {
   const factory _WriteSuccess(final T item,
-      {required final WriteDetails details}) = _$WriteSuccessImpl<T>;
+      {required final RequestDetails<T> details}) = _$WriteSuccessImpl<T>;
 
   @override
   T get item;
   @override
-  WriteDetails get details;
+  RequestDetails<T> get details;
   @override
   @JsonKey(ignore: true)
   _$$WriteSuccessImplCopyWith<T, _$WriteSuccessImpl<T>> get copyWith =>
@@ -153,7 +153,7 @@ abstract class _WriteSuccess<T extends Model> implements WriteSuccess<T> {
 /// @nodoc
 mixin _$BulkWriteSuccess<T extends Model> {
   List<T> get items => throw _privateConstructorUsedError;
-  WriteDetails get details => throw _privateConstructorUsedError;
+  RequestDetails<T> get details => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $BulkWriteSuccessCopyWith<T, BulkWriteSuccess<T>> get copyWith =>
@@ -166,7 +166,7 @@ abstract class $BulkWriteSuccessCopyWith<T extends Model, $Res> {
           BulkWriteSuccess<T> value, $Res Function(BulkWriteSuccess<T>) then) =
       _$BulkWriteSuccessCopyWithImpl<T, $Res, BulkWriteSuccess<T>>;
   @useResult
-  $Res call({List<T> items, WriteDetails details});
+  $Res call({List<T> items, RequestDetails<T> details});
 }
 
 /// @nodoc
@@ -194,7 +194,7 @@ class _$BulkWriteSuccessCopyWithImpl<T extends Model, $Res,
       details: null == details
           ? _value.details
           : details // ignore: cast_nullable_to_non_nullable
-              as WriteDetails,
+              as RequestDetails<T>,
     ) as $Val);
   }
 }
@@ -207,7 +207,7 @@ abstract class _$$BulkWriteSuccessImplCopyWith<T extends Model, $Res>
       __$$BulkWriteSuccessImplCopyWithImpl<T, $Res>;
   @override
   @useResult
-  $Res call({List<T> items, WriteDetails details});
+  $Res call({List<T> items, RequestDetails<T> details});
 }
 
 /// @nodoc
@@ -232,7 +232,7 @@ class __$$BulkWriteSuccessImplCopyWithImpl<T extends Model, $Res>
       details: null == details
           ? _value.details
           : details // ignore: cast_nullable_to_non_nullable
-              as WriteDetails,
+              as RequestDetails<T>,
     ));
   }
 }
@@ -252,7 +252,7 @@ class _$BulkWriteSuccessImpl<T extends Model> implements _BulkWriteSuccess<T> {
   }
 
   @override
-  final WriteDetails details;
+  final RequestDetails<T> details;
 
   @override
   String toString() {
@@ -283,12 +283,12 @@ class _$BulkWriteSuccessImpl<T extends Model> implements _BulkWriteSuccess<T> {
 abstract class _BulkWriteSuccess<T extends Model>
     implements BulkWriteSuccess<T> {
   const factory _BulkWriteSuccess(final List<T> items,
-      {required final WriteDetails details}) = _$BulkWriteSuccessImpl<T>;
+      {required final RequestDetails<T> details}) = _$BulkWriteSuccessImpl<T>;
 
   @override
   List<T> get items;
   @override
-  WriteDetails get details;
+  RequestDetails<T> get details;
   @override
   @JsonKey(ignore: true)
   _$$BulkWriteSuccessImplCopyWith<T, _$BulkWriteSuccessImpl<T>> get copyWith =>
@@ -658,7 +658,7 @@ abstract class _WriteClientError<T extends Model> extends WriteFailure<T> {
 /// @nodoc
 mixin _$ReadSuccess<T extends Model> {
   T? get item => throw _privateConstructorUsedError;
-  ReadDetails get details => throw _privateConstructorUsedError;
+  RequestDetails<T> get details => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $ReadSuccessCopyWith<T, ReadSuccess<T>> get copyWith =>
@@ -671,7 +671,7 @@ abstract class $ReadSuccessCopyWith<T extends Model, $Res> {
           ReadSuccess<T> value, $Res Function(ReadSuccess<T>) then) =
       _$ReadSuccessCopyWithImpl<T, $Res, ReadSuccess<T>>;
   @useResult
-  $Res call({T? item, ReadDetails details});
+  $Res call({T? item, RequestDetails<T> details});
 }
 
 /// @nodoc
@@ -698,7 +698,7 @@ class _$ReadSuccessCopyWithImpl<T extends Model, $Res,
       details: null == details
           ? _value.details
           : details // ignore: cast_nullable_to_non_nullable
-              as ReadDetails,
+              as RequestDetails<T>,
     ) as $Val);
   }
 }
@@ -711,7 +711,7 @@ abstract class _$$ReadSuccessImplCopyWith<T extends Model, $Res>
       __$$ReadSuccessImplCopyWithImpl<T, $Res>;
   @override
   @useResult
-  $Res call({T? item, ReadDetails details});
+  $Res call({T? item, RequestDetails<T> details});
 }
 
 /// @nodoc
@@ -736,7 +736,7 @@ class __$$ReadSuccessImplCopyWithImpl<T extends Model, $Res>
       details: null == details
           ? _value.details
           : details // ignore: cast_nullable_to_non_nullable
-              as ReadDetails,
+              as RequestDetails<T>,
     ));
   }
 }
@@ -749,7 +749,7 @@ class _$ReadSuccessImpl<T extends Model> implements _ReadSuccess<T> {
   @override
   final T? item;
   @override
-  final ReadDetails details;
+  final RequestDetails<T> details;
 
   @override
   String toString() {
@@ -779,12 +779,12 @@ class _$ReadSuccessImpl<T extends Model> implements _ReadSuccess<T> {
 
 abstract class _ReadSuccess<T extends Model> implements ReadSuccess<T> {
   const factory _ReadSuccess(final T? item,
-      {required final ReadDetails details}) = _$ReadSuccessImpl<T>;
+      {required final RequestDetails<T> details}) = _$ReadSuccessImpl<T>;
 
   @override
   T? get item;
   @override
-  ReadDetails get details;
+  RequestDetails<T> get details;
   @override
   @JsonKey(ignore: true)
   _$$ReadSuccessImplCopyWith<T, _$ReadSuccessImpl<T>> get copyWith =>
@@ -796,7 +796,7 @@ mixin _$ReadListSuccess<T extends Model> {
   List<T> get items => throw _privateConstructorUsedError;
   Map<String, T> get itemsMap => throw _privateConstructorUsedError;
   Set<String> get missingItemIds => throw _privateConstructorUsedError;
-  ReadDetails get details => throw _privateConstructorUsedError;
+  RequestDetails<T> get details => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $ReadListSuccessCopyWith<T, ReadListSuccess<T>> get copyWith =>
@@ -813,7 +813,7 @@ abstract class $ReadListSuccessCopyWith<T extends Model, $Res> {
       {List<T> items,
       Map<String, T> itemsMap,
       Set<String> missingItemIds,
-      ReadDetails details});
+      RequestDetails<T> details});
 }
 
 /// @nodoc
@@ -851,7 +851,7 @@ class _$ReadListSuccessCopyWithImpl<T extends Model, $Res,
       details: null == details
           ? _value.details
           : details // ignore: cast_nullable_to_non_nullable
-              as ReadDetails,
+              as RequestDetails<T>,
     ) as $Val);
   }
 }
@@ -868,7 +868,7 @@ abstract class _$$ReadListSuccessImplCopyWith<T extends Model, $Res>
       {List<T> items,
       Map<String, T> itemsMap,
       Set<String> missingItemIds,
-      ReadDetails details});
+      RequestDetails<T> details});
 }
 
 /// @nodoc
@@ -903,7 +903,7 @@ class __$$ReadListSuccessImplCopyWithImpl<T extends Model, $Res>
       details: null == details
           ? _value.details
           : details // ignore: cast_nullable_to_non_nullable
-              as ReadDetails,
+              as RequestDetails<T>,
     ));
   }
 }
@@ -946,7 +946,7 @@ class _$ReadListSuccessImpl<T extends Model> extends _ReadListSuccess<T> {
   }
 
   @override
-  final ReadDetails details;
+  final RequestDetails<T> details;
 
   @override
   String toString() {
@@ -986,7 +986,7 @@ abstract class _ReadListSuccess<T extends Model> extends ReadListSuccess<T> {
       {required final List<T> items,
       required final Map<String, T> itemsMap,
       required final Set<String> missingItemIds,
-      required final ReadDetails details}) = _$ReadListSuccessImpl<T>;
+      required final RequestDetails<T> details}) = _$ReadListSuccessImpl<T>;
   const _ReadListSuccess._() : super._();
 
   @override
@@ -996,7 +996,7 @@ abstract class _ReadListSuccess<T extends Model> extends ReadListSuccess<T> {
   @override
   Set<String> get missingItemIds;
   @override
-  ReadDetails get details;
+  RequestDetails<T> get details;
   @override
   @JsonKey(ignore: true)
   _$$ReadListSuccessImplCopyWith<T, _$ReadListSuccessImpl<T>> get copyWith =>

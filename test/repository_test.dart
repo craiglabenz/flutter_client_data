@@ -10,47 +10,46 @@ void main() {
   const TestModel obj = TestModel(id: 'also does not matter');
 
   group('Repository methods should pass through to SourceList', () {
-    // ignore: prefer_const_constructors
-    final emptyReadDetails = ReadDetails<TestModel>();
+    final emptyDetails = RequestDetails<TestModel>();
     test('including getById', () async {
       expect(
-        await repo.getById('also does not matter', emptyReadDetails),
+        await repo.getById('also does not matter', emptyDetails),
         isRight,
       );
     });
     test('including getById', () async {
       expect(
-        await repo.getByIds({'also does not matter'}, emptyReadDetails),
+        await repo.getByIds({'also does not matter'}, emptyDetails),
         isRight,
       );
     });
     test('including getItems', () async {
       expect(
-        await repo.getItems(emptyReadDetails),
+        await repo.getItems(emptyDetails),
         isRight,
       );
     });
     test('including getSelected', () async {
       expect(
-        await repo.getSelected(emptyReadDetails),
+        await repo.getSelected(emptyDetails),
         isRight,
       );
     });
     test('including setItem', () async {
       expect(
-        await repo.setItem(obj, const WriteDetails()),
+        await repo.setItem(obj, emptyDetails),
         isRight,
       );
     });
     test('including setItems', () async {
       expect(
-        await repo.setItems([obj], const WriteDetails()),
+        await repo.setItems([obj], emptyDetails),
         isRight,
       );
     });
     test('including setSelected', () async {
       expect(
-        await repo.setSelected(obj, const WriteDetails()),
+        await repo.setSelected(obj, emptyDetails),
         isRight,
       );
     });

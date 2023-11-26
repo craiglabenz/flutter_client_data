@@ -26,14 +26,18 @@ const errorBody = '{"error": "not found"}';
 final obj = TestModel.fromJson(jsonDecode(detailResponseBody));
 final obj2 = TestModel.fromJson(jsonDecode(detailResponseBody2));
 
-const rd = ReadDetails<TestModel>();
-const localRd = ReadDetails<TestModel>(requestType: RequestType.local);
-const remoteRd = ReadDetails<TestModel>(
+final details = RequestDetails<TestModel>();
+final localDetails = RequestDetails<TestModel>(requestType: RequestType.local);
+final refreshDetails = RequestDetails<TestModel>(
   requestType: RequestType.refresh,
 );
-const rdAbc = ReadDetails(setName: 'abc');
-
-const wrtAbc = WriteDetails(setName: 'abc');
+final abcDetails = RequestDetails<TestModel>(filters: const [
+  MsgStartsWithFilter('abc'),
+]);
+final localAbcDetails = RequestDetails<TestModel>(
+  filters: const [MsgStartsWithFilter('abc')],
+  requestType: RequestType.local,
+);
 
 RequestDelegate getRequestDelegate(
   List<String> bodies, {
@@ -112,7 +116,7 @@ void main() {
   group('SourceList.getById should', () {
     test('get and cache items', () async {
       final sl = getSourceList(delegate200);
-      final readResult = await sl.getById(_id, rd);
+      final readResult = await sl.getById(_id, details);
       final obj = readResult.getOrRaise().item;
       expect(readResult, isRight);
       expect(
@@ -125,12 +129,12 @@ void main() {
       );
       expect((sl.sources[0] as LocalMemorySource).itemIds, contains('uuid'));
       expect((sl.sources[1] as LocalMemorySource).itemIds, contains('uuid'));
-      expect((await sl.getById(_id, localRd)).getOrRaise().item, obj);
+      expect((await sl.getById(_id, localDetails)).getOrRaise().item, obj);
     });
 
     test('return Left when the item is not found', () async {
       final sl = getSourceList(delegate404);
-      final readResult = await sl.getById(_id, rd);
+      final readResult = await sl.getById(_id, details);
       expect(readResult, isRight);
       expect((sl.sources[0] as LocalMemorySource).itemIds, isEmpty);
       expect((sl.sources[1] as LocalMemorySource).itemIds, isEmpty);
@@ -140,17 +144,17 @@ void main() {
     test('honor request types in getById', () async {
       final sl = getSourceList(delegate404x2);
       (sl.sources[0] as LocalMemorySource<TestModel>)
-          .setItem(obj, const WriteDetails(requestType: RequestType.local));
+          .setItem(obj, localDetails);
       (sl.sources[1] as LocalMemorySource<TestModel>)
-          .setItem(obj, const WriteDetails(requestType: RequestType.local));
+          .setItem(obj, localDetails);
 
-      final readResult = await sl.getById(obj.id!, rd);
+      final readResult = await sl.getById(obj.id!, details);
       expect(readResult.getOrRaise().item, obj);
 
-      final localReadResult = await sl.getById(obj.id!, localRd);
+      final localReadResult = await sl.getById(obj.id!, localDetails);
       expect(localReadResult.getOrRaise().item, obj);
 
-      final remoteReadResult = await sl.getById(obj.id!, remoteRd);
+      final remoteReadResult = await sl.getById(obj.id!, refreshDetails);
       expect(remoteReadResult.getOrRaise().item, isNull);
     });
   });
@@ -158,7 +162,7 @@ void main() {
   group('SourceList.getByIds should', () {
     test('get and cache items', () async {
       final sl = getSourceList(getRequestDelegate([twoElementResponseBody]));
-      final readResult = await sl.getByIds({_id, _id2}, rd);
+      final readResult = await sl.getByIds({_id, _id2}, details);
       expect(readResult, isRight);
       expect(
         readResult.getOrRaise().items,
@@ -179,7 +183,7 @@ void main() {
 
     test('get and cache items on partial returns', () async {
       final sl = getSourceList(getRequestDelegate([listResponseBody]));
-      final readResult = await sl.getByIds({_id, _id2}, rd);
+      final readResult = await sl.getByIds({_id, _id2}, details);
       expect(readResult, isRight);
       expect(
         readResult.getOrRaise().items,
@@ -198,49 +202,55 @@ void main() {
     test('complete partially filled local hits', () async {
       final sl = getSourceList(twoItemdelegate200);
       (sl.sources[0] as LocalMemorySource<TestModel>)
-          .setItem(obj, const WriteDetails(requestType: RequestType.local));
+          .setItem(obj, localDetails);
       (sl.sources[1] as LocalMemorySource<TestModel>)
-          .setItem(obj, const WriteDetails(requestType: RequestType.local));
+          .setItem(obj, localDetails);
 
-      final localReadResult = await sl.getByIds({obj.id!, obj2.id!}, localRd);
+      final localReadResult =
+          await sl.getByIds({obj.id!, obj2.id!}, localDetails);
       expect(localReadResult.getOrRaise().items.length, 1);
       expect(localReadResult.getOrRaise().missingItemIds, {obj2.id!});
 
-      final remoteReadResult = await sl.getByIds({obj.id!, obj2.id!}, remoteRd);
+      final remoteReadResult =
+          await sl.getByIds({obj.id!, obj2.id!}, refreshDetails);
       expect(remoteReadResult.getOrRaise().items.length, 2);
     });
 
     test('honor request types', () async {
       final sl = getSourceList(emptyDelegate);
-      (sl.sources[0] as LocalMemorySource<TestModel>).setItems(
-          [obj, obj2], const WriteDetails(requestType: RequestType.local));
-      (sl.sources[1] as LocalMemorySource<TestModel>).setItems(
-          [obj, obj2], const WriteDetails(requestType: RequestType.local));
+      (sl.sources[0] as LocalMemorySource<TestModel>)
+          .setItems([obj, obj2], localDetails);
+      (sl.sources[1] as LocalMemorySource<TestModel>)
+          .setItems([obj, obj2], localDetails);
 
-      final readResult = await sl.getByIds({obj.id!, obj2.id!}, rd);
+      final readResult = await sl.getByIds({obj.id!, obj2.id!}, details);
       expect(readResult.getOrRaise().items.length, 2);
 
-      final localReadResult = await sl.getByIds({obj.id!, obj2.id!}, localRd);
+      final localReadResult =
+          await sl.getByIds({obj.id!, obj2.id!}, localDetails);
       expect(localReadResult.getOrRaise().items.length, 2);
 
-      final remoteReadResult = await sl.getByIds({obj.id!, obj2.id!}, remoteRd);
+      final remoteReadResult =
+          await sl.getByIds({obj.id!, obj2.id!}, refreshDetails);
       expect(remoteReadResult.getOrRaise().items.length, 0);
     });
 
     test('surface 404s', () async {
       final sl = getSourceList(delegate404x2);
-      (sl.sources[0] as LocalMemorySource<TestModel>).setItems(
-          [obj, obj2], const WriteDetails(requestType: RequestType.local));
-      (sl.sources[1] as LocalMemorySource<TestModel>).setItems(
-          [obj, obj2], const WriteDetails(requestType: RequestType.local));
+      (sl.sources[0] as LocalMemorySource<TestModel>)
+          .setItems([obj, obj2], localDetails);
+      (sl.sources[1] as LocalMemorySource<TestModel>)
+          .setItems([obj, obj2], localDetails);
 
-      final readResult = await sl.getByIds({obj.id!, obj2.id!}, rd);
+      final readResult = await sl.getByIds({obj.id!, obj2.id!}, details);
       expect(readResult.getOrRaise().items.length, 2);
 
-      final localReadResult = await sl.getByIds({obj.id!, obj2.id!}, localRd);
+      final localReadResult =
+          await sl.getByIds({obj.id!, obj2.id!}, localDetails);
       expect(localReadResult.getOrRaise().items.length, 2);
 
-      final remoteReadResult = await sl.getByIds({obj.id!, obj2.id!}, remoteRd);
+      final remoteReadResult =
+          await sl.getByIds({obj.id!, obj2.id!}, refreshDetails);
       expect(remoteReadResult, isLeft);
     });
   });
@@ -248,27 +258,27 @@ void main() {
   group('SourceList.getItems should', () {
     test('load items', () async {
       final sl = getSourceList(twoItemdelegate200x2);
-      (sl.sources[0] as LocalMemorySource<TestModel>).setItems(
-          [obj, obj2], const WriteDetails(requestType: RequestType.local));
+      (sl.sources[0] as LocalMemorySource<TestModel>)
+          .setItems([obj, obj2], localDetails);
 
-      final localReadResult = await sl.getItems(localRd);
+      final localReadResult = await sl.getItems(localDetails);
       expect(localReadResult.getOrRaise().items.length, 2);
 
-      final remoteReadResult = await sl.getItems(remoteRd);
+      final remoteReadResult = await sl.getItems(refreshDetails);
       expect(remoteReadResult.getOrRaise().items.length, 2);
     });
 
     test('honor request types and cache items', () async {
       final sl = getSourceList(getRequestDelegate([twoElementResponseBody]));
 
-      final localReadResult = await sl.getItems(localRd);
+      final localReadResult = await sl.getItems(localDetails);
       expect(localReadResult.getOrRaise().items.length, 0);
 
-      final remoteReadResult = await sl.getItems(remoteRd);
+      final remoteReadResult = await sl.getItems(refreshDetails);
       expect(remoteReadResult.getOrRaise().items.length, 2);
       expect((sl.sources[0] as LocalMemorySource<TestModel>).items.length, 2);
 
-      final localReadResult2 = await sl.getItems(localRd);
+      final localReadResult2 = await sl.getItems(localDetails);
       expect(localReadResult2.getOrRaise().items.length, 2);
     });
 
@@ -277,30 +287,31 @@ void main() {
         [errorBody],
         statusCode: HttpStatus.notFound,
       ));
-      (sl.sources[0] as LocalMemorySource<TestModel>).setItems(
-          [obj, obj2], const WriteDetails(requestType: RequestType.local));
+      (sl.sources[0] as LocalMemorySource<TestModel>)
+          .setItems([obj, obj2], localDetails);
 
-      final remoteReadResult = await sl.getItems(remoteRd);
+      final remoteReadResult = await sl.getItems(refreshDetails);
       expect(remoteReadResult, isLeft);
 
-      final localReadResult = await sl.getItems(localRd);
+      final localReadResult = await sl.getItems(localDetails);
       expect(localReadResult.getOrRaise().items.length, 2);
     });
 
     test('honor setNames', () async {
       final sl = getSourceList(getRequestDelegate([twoElementResponseBody]));
 
-      final remoteReadResult = await sl.getItems(rd);
+      final remoteReadResult = await sl.getItems(details);
       expect(remoteReadResult.getOrRaise().items.length, 2);
 
       final localReadResult = await sl.getItems(
-        const ReadDetails<TestModel>(
-            setName: 'abc', requestType: RequestType.local),
+        RequestDetails<TestModel>(
+          filters: const [MsgStartsWithFilter('abc')],
+          requestType: RequestType.local,
+        ),
       );
       expect(localReadResult.getOrRaise().items.length, 0);
 
-      final localReadResult2 = await sl.getItems(
-          const ReadDetails<TestModel>(requestType: RequestType.local));
+      final localReadResult2 = await sl.getItems(localDetails);
       expect(localReadResult2.getOrRaise().items.length, 2);
     });
 
@@ -309,34 +320,40 @@ void main() {
         twoElementResponseBody,
         twoElementResponseBody,
       ]));
-      await sl.getItems(rd);
+      await sl.getItems(details);
 
-      final localReadResult = await sl.getItems(
-        const ReadDetails<TestModel>(requestType: RequestType.local),
-      );
+      final localReadResult = await sl.getItems(localDetails);
       expect(localReadResult.getOrRaise().items.length, 2);
 
-      final localReadResult2 = await sl.getFilteredItems(
-          const ReadDetails<TestModel>(requestType: RequestType.local),
-          const [FieldEquals<TestModel>('msg', 'Fred')]);
+      final localMsgFredDetails = RequestDetails<TestModel>(
+        filters: const [FieldEquals<TestModel>('msg', 'Fred')],
+        requestType: RequestType.local,
+      );
+
+      final localReadResult2 = await sl.getItems(localMsgFredDetails);
       expect(localReadResult2.getOrRaise().items.length, 1);
       expect(localReadResult2.getOrRaise().items.first.msg, 'Fred');
 
-      final localReadResult3 = await sl.getFilteredItems(
-          const ReadDetails<TestModel>(requestType: RequestType.global),
-          const [FieldEquals<TestModel>('msg', 'Fred')]);
-      expect(localReadResult3.getOrRaise().items.length, 1);
-      expect(localReadResult3.getOrRaise().items.first.msg, 'Fred');
+      final globalMsgFredDetails = RequestDetails<TestModel>(
+        filters: const [FieldEquals<TestModel>('msg', 'Fred')],
+        requestType: RequestType.global,
+      );
+
+      final globalResults = await sl.getItems(globalMsgFredDetails);
+      expect(globalResults.getOrRaise().items.length, 1);
+      expect(globalResults.getOrRaise().items.first.msg, 'Fred');
 
       // Because our fake API doesn't filter anything (which a real API would),
       // this should still return both despite us requesting a filter. This is
       // because the SourceList trusts that all sources would apply a filter
       // identically, so it does not need to verify a real ApiSource's work by
       // running the predicate locally.
-      final localReadResult4 = await sl.getFilteredItems(
-          const ReadDetails<TestModel>(requestType: RequestType.refresh),
-          const [FieldEquals<TestModel>('msg', 'Fred')]);
-      expect(localReadResult4.getOrRaise().items.length, 2);
+      final refreshMsgFredDetails = RequestDetails<TestModel>(
+        filters: const [FieldEquals<TestModel>('msg', 'Fred')],
+        requestType: RequestType.refresh,
+      );
+      final refreshResults = await sl.getItems(refreshMsgFredDetails);
+      expect(refreshResults.getOrRaise().items.length, 2);
     });
   });
 
@@ -344,14 +361,14 @@ void main() {
     test('load and cache items', () async {
       final sl = getSourceList(
           getRequestDelegate([twoElementResponseBody, twoElementResponseBody]));
-      final localReadResult = await sl.getSelected(localRd);
+      final localReadResult = await sl.getSelected(localDetails);
       expect(localReadResult.getOrRaise().items.length, 0);
 
-      final remoteReadResult = await sl.getSelected(remoteRd);
+      final remoteReadResult = await sl.getSelected(refreshDetails);
       expect(remoteReadResult.getOrRaise().items.length, 2);
       expect((sl.sources[0] as LocalMemorySource<TestModel>).items.length, 2);
 
-      final localReadResult2 = await sl.getSelected(localRd);
+      final localReadResult2 = await sl.getSelected(localDetails);
       expect(localReadResult2.getOrRaise().items.length, 2);
     });
   });
@@ -360,10 +377,10 @@ void main() {
     test('persist an item to all layers', () async {
       const newObj = TestModel(id: null, msg: "new");
       final sl = getSourceList(creatableDelegate);
-      final writeResult = await sl.setItem(newObj, const WriteDetails());
+      final writeResult = await sl.setItem(newObj, details);
       expect(writeResult.getOrRaise().item, obj);
 
-      final localReadResult = await sl.getItems(localRd);
+      final localReadResult = await sl.getItems(localDetails);
       expect(localReadResult.getOrRaise().items.length, 1);
     });
 
@@ -371,16 +388,13 @@ void main() {
       const newObj = TestModel(id: null, msg: "new");
       final sl = getSourceList(
           getRequestDelegate([listResponseBody], canCreate: true));
-      final writeResult = await sl.setItem(newObj, wrtAbc);
+      final writeResult = await sl.setItem(newObj, abcDetails);
       final savedObj = writeResult.getOrRaise().item;
       expect(savedObj, obj);
 
       final localReadResult = await sl.getById(
         savedObj.id!,
-        const ReadDetails<TestModel>(
-          requestType: RequestType.local,
-          setName: 'abc',
-        ),
+        localAbcDetails,
       );
       expect(localReadResult.getOrRaise().item, savedObj);
     });
@@ -395,11 +409,11 @@ void main() {
           canCreate: true));
       final writeResult = await sl.setItems(
         [newObj, newObj2],
-        const WriteDetails(requestType: RequestType.local),
+        localDetails,
       );
       expect(writeResult.getOrRaise().items.length, 2);
 
-      final localReadResult = await sl.getItems(localRd);
+      final localReadResult = await sl.getItems(localDetails);
       expect(localReadResult.getOrRaise().items.length, 2);
     });
 
@@ -410,10 +424,7 @@ void main() {
           [detailResponseBody, detailResponseBody2],
           canCreate: true));
       expect(
-        () => sl.setItems(
-          [newObj],
-          const WriteDetails(requestType: RequestType.refresh),
-        ),
+        () => sl.setItems([newObj], refreshDetails),
         throwsAssertionError,
       );
     });
@@ -425,7 +436,7 @@ void main() {
       final sl = getSourceList(getRequestDelegate([detailResponseBody]));
       final writeResult = await sl.setSelected(
         newObj,
-        const WriteDetails(requestType: RequestType.local),
+        localDetails,
       );
       expect(writeResult, isRight);
     });
@@ -435,7 +446,7 @@ void main() {
       final sl = getSourceList(getRequestDelegate([]));
       await sl.setSelected(
         newObj,
-        const WriteDetails(requestType: RequestType.local),
+        localDetails,
       );
       expect(
         (sl.sources.first as LocalMemorySource).selectedIds,
