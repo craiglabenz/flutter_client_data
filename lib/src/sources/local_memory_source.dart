@@ -101,7 +101,11 @@ class LocalMemorySource<T extends Model> extends Source<T> {
   }
 
   ReadListResult<T> _applyUnseenRequest(RequestDetails<T> details) {
-    // TODO(craiglabenz): return empty result if pagination is not empty
+    // Unseen requests with pagination cannot be fulfilled, as we cannot know we
+    // have all the results for that page.
+    if (details.pagination != null) {
+      return Right(ReadListSuccess.fromList([], details, <String>{}));
+    }
 
     Set<String> satisfyingIds = itemIds;
     for (T item in items.values) {
@@ -160,7 +164,8 @@ class LocalMemorySource<T extends Model> extends Source<T> {
       requestCache[details.empty.cacheKey] = <String>{};
     }
     requestCache[details.cacheKey]!.add(item.id!);
-    if (!details.isEmpty) {
+
+    if (details.isNotEmpty) {
       requestCache[details.empty.cacheKey]!.add(item.id!);
     }
     return Right(WriteSuccess<T>(item, details: details));

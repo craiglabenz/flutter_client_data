@@ -61,6 +61,17 @@ void main() {
       fullyContains(mem, item);
       expect(mem.itemIds.length, equals(1));
     });
+
+    test('cache pagination info', () {
+      final deets = RequestDetails<TestModel>(
+        pagination: Pagination.page(2),
+      );
+      final item = TestModel.randomId();
+      mem.setItem(item, deets);
+      expect(mem.requestCache, contains(deets.cacheKey));
+      expect(mem.requestCache[deets.cacheKey], contains(item.id));
+      expect(mem.requestCache[deets.empty.cacheKey], contains(item.id));
+    });
   });
 
   group('LocalMemorySource.setItems should', () {
@@ -191,7 +202,7 @@ void main() {
     });
   });
 
-  group('LocalMemorySource.getItem should', () {
+  group('LocalMemorySource.getById should', () {
     setUp(() {
       mem = LocalMemorySource<TestModel>();
     });
@@ -226,6 +237,30 @@ void main() {
       final retrievedItem2 = await mem.getById(item.id!, abcDetails);
       expect(retrievedItem2, isRight);
       expect(retrievedItem2.getOrRaise().item, item);
+    });
+
+    test('honor pagination', () async {
+      final deets = RequestDetails<TestModel>();
+      final page1Deets = RequestDetails<TestModel>(
+        pagination: Pagination.page(1),
+      );
+      final page2Deets = RequestDetails<TestModel>(
+        pagination: Pagination.page(2),
+      );
+      final item = TestModel.randomId();
+      mem.setItem(item, page1Deets);
+
+      final result = await mem.getById(item.id!, deets);
+      expect(result, isRight);
+      expect(result.getOrRaise().item, isNotNull);
+
+      final page1Result = await mem.getById(item.id!, page1Deets);
+      expect(page1Result, isRight);
+      expect(page1Result.getOrRaise().item, isNotNull);
+
+      final page2Result = await mem.getById(item.id!, page2Deets);
+      expect(page2Result, isRight);
+      expect(page2Result.getOrRaise().item, isNull);
     });
   });
 
@@ -298,10 +333,9 @@ void main() {
       expect(result.items, isEmpty);
       expect(result.itemsMap, isEmpty);
       expect(result.missingItemIds, isEmpty);
-      // expect(result.details.pagination, isNull);
+      expect(result.details.pagination, isNull);
       expect(result.details, xyzDetails);
 
-      // But globalSetName still returns
       final maybeResult2 = await mem.getItems(details);
       final result2 = maybeResult2.getOrRaise();
       expect(
@@ -359,6 +393,27 @@ void main() {
       final result = maybeResult.getOrRaise();
       expect(result.items, hasLength(1));
       expect(result.items.first.msg, 'asdf');
+    });
+
+    test('honor pagination', () async {
+      final deets = RequestDetails<TestModel>();
+      final page1Deets = RequestDetails<TestModel>(
+        pagination: Pagination.page(1),
+      );
+      final page2Deets = RequestDetails<TestModel>(
+        pagination: Pagination.page(2),
+      );
+
+      final item = TestModel.randomId();
+      final item2 = TestModel.randomId();
+      mem.setItems([item, item2], page2Deets);
+
+      final deetsResults = await mem.getItems(deets);
+      expect(deetsResults.getOrRaise().items, hasLength(2));
+      final page1DeetsResults = await mem.getItems(page1Deets);
+      expect(page1DeetsResults.getOrRaise().items, hasLength(0));
+      final page2DeetsResults = await mem.getItems(page2Deets);
+      expect(page2DeetsResults.getOrRaise().items, hasLength(2));
     });
   });
 

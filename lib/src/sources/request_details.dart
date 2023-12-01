@@ -5,38 +5,49 @@ import 'package:equatable/src/equatable_utils.dart';
 
 class RequestDetails<T extends Model> extends Equatable {
   RequestDetails({
-    this.requestType = defaultRequestType,
     this.filters = const [],
+    this.requestType = defaultRequestType,
+    this.pagination,
     this.shouldOverwrite = defaultShouldOverwrite,
   });
 
   factory RequestDetails.read({
     RequestType requestType = defaultRequestType,
     List<ReadFilter<T>> filters = const [],
+    Pagination? pagination,
   }) =>
-      RequestDetails(requestType: requestType, filters: filters);
+      RequestDetails(
+        requestType: requestType,
+        filters: filters,
+        pagination: pagination,
+      );
 
   factory RequestDetails.write({
     RequestType requestType = defaultRequestType,
     bool shouldOverwrite = defaultShouldOverwrite,
+    Pagination? pagination,
   }) =>
       RequestDetails(
         requestType: requestType,
         shouldOverwrite: shouldOverwrite,
+        pagination: pagination,
       );
 
   final RequestType requestType;
   final List<ReadFilter<T>> filters;
   final bool shouldOverwrite;
+  final Pagination? pagination;
 
-  static const defaultShouldOverwrite = true;
+  final defaultPagination = Pagination.page(1);
   static const defaultRequestType = RequestType.global;
+  static const defaultShouldOverwrite = true;
 
   @override
   List<Object?> get props => [
         requestType,
         shouldOverwrite,
         ...filters.map<int>((filter) => filter.hashCode).toList(),
+        pagination,
       ];
 
   /// Collapses this request into a key suitable for local memory caching.
@@ -48,10 +59,13 @@ class RequestDetails<T extends Model> extends Equatable {
       runtimeType.hashCode ^
       mapPropsToHashCode([
         ...filters.map<int>((filter) => filter.hashCode).toList(),
+        pagination,
       ]);
 
-  bool get isEmpty => filters.isEmpty;
+  /// Indicates whether the filters AND pagination are empty.
+  bool get isEmpty => filters.isEmpty && pagination == null;
 
+  /// Indicates whether the filters OR pagination are not empty.
   bool get isNotEmpty => !isEmpty;
 
   /// Copy of this RequestDetails without any filters, pagination, or other
@@ -61,9 +75,25 @@ class RequestDetails<T extends Model> extends Equatable {
 
   @override
   String toString() => 'RequestDetails(requestType: $requestType, filters: '
-      '${filters.map<String>((filter) => filter.toString()).toList()})';
+      '${filters.map<String>((filter) => filter.toString()).toList()}, pagination: $pagination)';
 
   void assertEmpty(String functionName) {
     assert(isEmpty, 'Must not supply filters or pagination to $functionName');
   }
+}
+
+class Pagination extends Equatable {
+  const Pagination({required this.pageSize, required this.page});
+  factory Pagination.page(int page, {int pageSize = defaultPageSize}) =>
+      Pagination(pageSize: pageSize, page: page);
+  final int pageSize;
+  final int page;
+
+  static const defaultPageSize = 20;
+
+  @override
+  List<Object?> get props => [pageSize, page];
+
+  @override
+  String toString() => 'Pagination(pageSize: $pageSize, page: $page)';
 }

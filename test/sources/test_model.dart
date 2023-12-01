@@ -1,10 +1,17 @@
+import 'dart:math';
 import 'package:client_data/client_data.dart';
 import 'package:dartz/dartz.dart';
 import 'package:mockito/mockito.dart';
 
 class TestModel extends Model {
-  const TestModel({required super.id, this.msg = 'default'});
+  const TestModel({required super.id, this.msg = defaultMessage});
+  factory TestModel.randomId([String msg = defaultMessage]) => TestModel(
+        id: Random().nextDouble().toString(),
+        msg: msg,
+      );
   final String msg;
+
+  static const defaultMessage = 'default';
 
   @override
   Map<String, dynamic> toJson() => {'id': this.id, 'msg': msg};
