@@ -39,7 +39,6 @@ class TestModel extends Model {
     fromJson: TestModel.fromJson,
     getDetailUrl: (id) => ApiUrl(path: 'test/$id'),
     getListUrl: () => const ApiUrl(path: 'test/'),
-    getSelectedItemsUrl: () => const ApiUrl(path: 'users/me/tests'),
   );
 }
 
@@ -88,16 +87,6 @@ class FakeSourceList<T extends Model> extends Fake implements SourceList<T> {
       );
 
   @override
-  Future<ReadListResult<T>> getSelected(RequestDetails<T> details) =>
-      Future.value(
-        Future.value(
-          Right(
-            ReadListSuccess<T>.fromList([objs.first], details, {}),
-          ),
-        ),
-      );
-
-  @override
   Future<WriteResult<T>> setItem(T item, RequestDetails<T> details) =>
       Future.value(
         Right(
@@ -113,18 +102,6 @@ class FakeSourceList<T extends Model> extends Fake implements SourceList<T> {
       Future.value(
         Right(
           BulkWriteSuccess<T>([objs.first], details: details),
-        ),
-      );
-
-  @override
-  Future<WriteResult<T>> setSelected(
-    T item,
-    RequestDetails<T> details, {
-    bool isSelected = true,
-  }) =>
-      Future.value(
-        Right(
-          WriteSuccess<T>(objs.first, details: details),
         ),
       );
 }

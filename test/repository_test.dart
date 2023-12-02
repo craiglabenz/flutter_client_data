@@ -29,12 +29,6 @@ void main() {
         isRight,
       );
     });
-    test('including getSelected', () async {
-      expect(
-        await repo.getSelected(emptyDetails),
-        isRight,
-      );
-    });
     test('including setItem', () async {
       expect(
         await repo.setItem(obj, emptyDetails),
@@ -44,12 +38,6 @@ void main() {
     test('including setItems', () async {
       expect(
         await repo.setItems([obj], emptyDetails),
-        isRight,
-      );
-    });
-    test('including setSelected', () async {
-      expect(
-        await repo.setSelected(obj, emptyDetails),
         isRight,
       );
     });

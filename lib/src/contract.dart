@@ -10,8 +10,6 @@ abstract class DataContract<T extends Model> {
     Set<String> ids,
     RequestDetails<T> details,
   );
-  Future<ReadListResult<T>> getSelected(RequestDetails<T> details);
-
   Future<ReadListResult<T>> getItems(RequestDetails<T> details);
 
   // Setters.
@@ -23,9 +21,4 @@ abstract class DataContract<T extends Model> {
     List<T> items,
     RequestDetails<T> details,
   );
-  Future<WriteResult<T>> setSelected(
-    T item,
-    RequestDetails<T> details, {
-    bool isSelected = true,
-  });
 }

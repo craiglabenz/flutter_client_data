@@ -44,7 +44,6 @@ void main() {
     ],
     bindings: Bindings<Nested>(
       getDetailUrl: (String id) => ApiUrl(path: '/nested/$id'),
-      getSelectedItemsUrl: () => const ApiUrl(path: '/delete/me'),
       fromJson: (Map<String, dynamic> data) => Nested(
         id: data['id'],
         body: data['body'],

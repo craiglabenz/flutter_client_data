@@ -110,98 +110,6 @@ void main() {
     });
   });
 
-  group('LocalMemorySource.setSelectedItem should', () {
-    setUp(() {
-      mem = LocalMemorySource<TestModel>();
-    });
-
-    test('set new items', () {
-      const item = TestModel(id: 'item 1');
-      mem.setSelected(item, details);
-      fullyContains(mem, item, isSelected: true);
-    });
-
-    test('set known items', () {
-      const item = TestModel(id: 'item 1');
-      mem.setItem(item, details);
-      fullyContains(mem, item);
-      mem.setSelected(item, details);
-      fullyContains(mem, item, isSelected: true);
-    });
-
-    test('set new items with set name', () {
-      const item = TestModel(id: 'item 1');
-      mem.setSelected(item, abcDetails);
-      fullyContains(mem, item,
-          cacheKeys: [abcDetails.cacheKey], isSelected: true);
-    });
-
-    test('set known items with set name', () {
-      const item = TestModel(id: 'item 1');
-      mem.setItem(item, details);
-      fullyContains(mem, item);
-      mem.setSelected(item, abcDetails);
-      fullyContains(mem, item,
-          cacheKeys: [abcDetails.cacheKey], isSelected: true);
-    });
-
-    test('set known items with set name but no overwrite', () {
-      const item = TestModel(id: 'item 1');
-      mem.setItem(item, details);
-      fullyContains(mem, item);
-      mem.setSelected(item, abcDetailsNoOverwrite);
-      fullyContains(mem, item,
-          cacheKeys: [abcDetails.cacheKey], isSelected: true);
-    });
-
-    test('set known items with new values and set name but no overwrite', () {
-      const item = TestModel(id: 'item 1');
-      mem.setItem(item, details);
-      fullyContains(mem, item);
-
-      const itemTake2 = TestModel(id: 'item 1', msg: 'different');
-      mem.setSelected(itemTake2, abcDetailsNoOverwrite);
-      fullyContains(mem, item,
-          cacheKeys: [abcDetails.cacheKey], isSelected: true);
-    });
-
-    test('set known items with new values and set name', () {
-      const item = TestModel(id: 'item 1');
-      mem.setItem(item, details);
-      fullyContains(mem, item);
-
-      const itemTake2 = TestModel(id: 'item 1', msg: 'different');
-      mem.setSelected(itemTake2, abcDetails);
-      fullyContains(mem, itemTake2,
-          cacheKeys: [abcDetails.cacheKey], isSelected: true);
-    });
-
-    test('set new item with first selected value as false', () {
-      const item = TestModel(id: 'item 1');
-      mem.setSelected(item, details, isSelected: false);
-      fullyContains(mem, item);
-    });
-
-    test('set known item with changes', () {
-      const item = TestModel(id: 'item 1');
-      mem.setItem(item, details);
-      const itemTake2 = TestModel(id: 'item 1', msg: 'different');
-      mem.setSelected(itemTake2, details, isSelected: false);
-      fullyContains(mem, itemTake2);
-
-      mem.setSelected(itemTake2, details, isSelected: true);
-      fullyContains(mem, itemTake2, isSelected: true);
-    });
-
-    test('remove set items', () {
-      const item = TestModel(id: 'item 1');
-      mem.setSelected(item, details, isSelected: true);
-      fullyContains(mem, item, isSelected: true);
-      mem.setSelected(item, details, isSelected: false);
-      fullyContains(mem, item);
-    });
-  });
-
   group('LocalMemorySource.getById should', () {
     setUp(() {
       mem = LocalMemorySource<TestModel>();
@@ -417,43 +325,6 @@ void main() {
     });
   });
 
-  group('LocalMemorySource.getSelectedItems should', () {
-    const item = TestModel(id: 'item 1');
-    const item2 = TestModel(id: 'item 2');
-    setUp(() {
-      mem = LocalMemorySource<TestModel>();
-    });
-
-    test('return selected items', () async {
-      mem.setItem(item, details);
-      mem.setSelected(item2, details);
-      final maybeResult = await mem.getSelected(details);
-      final result = maybeResult.getOrRaise();
-      expect(
-        result,
-        ReadListSuccess<TestModel>.fromList([item2], details, {}),
-      );
-    });
-
-    test('return selected items from setName', () async {
-      mem.setItem(item, details);
-      mem.setSelected(item2, details);
-
-      const item3 = TestModel(id: 'item 3');
-      final setNameDetails = RequestDetails<TestModel>(
-        filters: const [MsgStartsWithFilter('setName')],
-      );
-      mem.setSelected(item3, setNameDetails);
-
-      final maybeResult = await mem.getSelected(setNameDetails);
-      final result = maybeResult.getOrRaise();
-      expect(
-        result,
-        ReadListSuccess<TestModel>.fromList([item3], setNameDetails, {}),
-      );
-    });
-  });
-
   group('LocalMemorySource.requestCache should', () {
     const item = TestModel(id: 'item 1');
     const item2 = TestModel(id: 'item 2');
@@ -509,7 +380,6 @@ void fullyContains(
   LocalMemorySource<TestModel> mem,
   TestModel item, {
   List<int> cacheKeys = const [],
-  bool isSelected = false,
 }) {
   expect(mem.itemIds, contains(item.id!));
   expect(mem.items.containsKey(item.id!), true);
@@ -522,5 +392,4 @@ void fullyContains(
     expect(mem.requestCache[setName]!, contains(item.id));
   }
   expect(mem.items[item.id!]!.msg, item.msg);
-  expect(mem.selectedIds.contains(item.id!), isSelected);
 }

@@ -21,10 +21,6 @@ class Repository<T extends Model> extends DataContract<T> {
       sourceList.getItems(details);
 
   @override
-  Future<ReadListResult<T>> getSelected(RequestDetails<T> details) =>
-      sourceList.getSelected(details);
-
-  @override
   Future<WriteResult<T>> setItem(T item, RequestDetails<T> details) =>
       sourceList.setItem(item, details);
 
@@ -34,12 +30,4 @@ class Repository<T extends Model> extends DataContract<T> {
     RequestDetails<T> details,
   ) =>
       sourceList.setItems(items, details);
-
-  @override
-  Future<WriteResult<T>> setSelected(
-    T item,
-    RequestDetails<T> details, {
-    bool isSelected = true,
-  }) =>
-      sourceList.setSelected(item, details, isSelected: isSelected);
 }

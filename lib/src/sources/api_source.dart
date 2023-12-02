@@ -108,25 +108,6 @@ class ApiSource<T extends Model> extends Source<T> {
     );
   }
 
-  @override
-  Future<ReadListResult<T>> getSelected(RequestDetails<T> details) async {
-    final request = ReadApiRequest(url: bindings.getSelectedItemsUrl());
-    final ApiResult result = await api.get(request);
-
-    return result.map(
-      success: (s) {
-        final List<T> items = hydrateListResponse(result as ApiSuccess);
-        final itemsById = <String, T>{};
-        for (final T item in items) {
-          // Objects from the server must always have an Id set.
-          itemsById[item.id!] = item;
-        }
-        return Right(ReadListSuccess<T>.fromMap(itemsById, details, {}));
-      },
-      error: (e) => Left(ReadFailure.fromApiError(e)),
-    );
-  }
-
   void queueId(String id) {
     if (!queuedIds.contains(id) && !idsCurrentlyBeingFetched.contains(id)) {
       _print('Id $id not yet queued - adding to queue now');
@@ -246,23 +227,4 @@ class ApiSource<T extends Model> extends Source<T> {
         },
         plainText: (PlainTextApiResultBody body) => <T>[],
       );
-
-  @override
-  Future<WriteResult<T>> setSelected(
-    T item,
-    RequestDetails<T> details, {
-    bool isSelected = true,
-  }) async {
-    final request = WriteApiRequest(
-      url: bindings.getSelectedItemsUrl(),
-      body: item.serializeId(),
-    );
-    final ApiResult result =
-        await (isSelected ? api.post(request) : api.delete(request));
-
-    return result.map(
-      success: (_) => Right(WriteSuccess(item, details: details)),
-      error: (e) => Left(WriteFailure.fromApiError(e)),
-    );
-  }
 }

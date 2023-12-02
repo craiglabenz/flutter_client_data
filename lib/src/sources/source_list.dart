@@ -48,17 +48,10 @@ class SourceList<T extends Model> extends DataContract<T> {
   Future<void> _cacheItems(
     List<T> items,
     List<Source> emptySources,
-    RequestDetails<T> details, [
-    bool? isSelected,
-  ]) async {
+    RequestDetails<T> details,
+  ) async {
     for (final source in emptySources) {
-      if (isSelected != null) {
-        for (final T item in items) {
-          source.setSelected(item, details, isSelected: isSelected);
-        }
-      } else {
-        await source.setItems(items, details);
-      }
+      await source.setItems(items, details);
     }
   }
 
@@ -175,31 +168,6 @@ class SourceList<T extends Model> extends DataContract<T> {
   }
 
   @override
-  Future<ReadListResult<T>> getSelected(RequestDetails<T> details) async {
-    details.assertEmpty('getSelected');
-    final emptySources = <Source>[];
-    for (final matchedSource in getSources(requestType: details.requestType)) {
-      if (matchedSource.unmatched) {
-        emptySources.add(matchedSource.source);
-        continue;
-      }
-      final sourceResult = await matchedSource.source.getSelected(details);
-
-      if (sourceResult.isLeft()) {
-        return sourceResult;
-      }
-      List<T> items = sourceResult.getOrRaise().items;
-      if (items.isNotEmpty) {
-        await _cacheItems(items, emptySources, details, true);
-        return Right(ReadListSuccess<T>.fromList(items, details, {}));
-      } else {
-        emptySources.add(matchedSource.source);
-      }
-    }
-    return Right(ReadListSuccess<T>.fromList([], details, {}));
-  }
-
-  @override
   Future<WriteResult<T>> setItem(T item, RequestDetails<T> details) async {
     // T _item = item;
     for (final ms in getSources(
@@ -243,24 +211,6 @@ class SourceList<T extends Model> extends DataContract<T> {
       }
     }
     return Right(BulkWriteSuccess<T>(items, details: details));
-  }
-
-  @override
-  Future<WriteResult<T>> setSelected(T item, RequestDetails<T> details,
-      {bool isSelected = true}) async {
-    assert(item.id != null, 'Can only mark saved items as selected');
-    for (final ms in getSources(requestType: details.requestType)) {
-      if (ms.unmatched) continue;
-      final result = await ms.source.setSelected(
-        item,
-        details,
-        isSelected: isSelected,
-      );
-      if (result.isLeft()) {
-        return result;
-      }
-    }
-    return Right(WriteSuccess<T>(item, details: details));
   }
 }
 

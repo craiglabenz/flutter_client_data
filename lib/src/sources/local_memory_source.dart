@@ -4,7 +4,6 @@ import 'package:client_data/client_data.dart';
 class LocalMemorySource<T extends Model> extends Source<T> {
   Map<String, T> items = {};
   Set<String> get itemIds => items.keys.toSet();
-  Set<String> selectedIds = {};
   Set<int> knownEmptySets = {};
   Map<int, Set<String>> requestCache = {};
 
@@ -36,9 +35,8 @@ class LocalMemorySource<T extends Model> extends Source<T> {
     return items[id];
   }
 
-  /// Returns all known items from the set of IDs.
-  /// Able to return non-empty `missingItemIds`, because unlike setNames and
-  /// selected items, we can encounter IDs to unknown objects.
+  /// Returns all known items from the set of IDs. Any id values not found
+  /// appear in `missingItemIds`.
   @override
   Future<ReadListResult<T>> getByIds(
     Set<String> ids,
@@ -125,27 +123,6 @@ class LocalMemorySource<T extends Model> extends Source<T> {
     );
   }
 
-  /// Returns all SelectedItems that are locally available.
-  @override
-  Future<ReadListResult<T>> getSelected(RequestDetails<T> details) async {
-    final items = <T>[];
-    final missingItemIds = <String>{};
-    for (String id in selectedIds) {
-      final item = _getByIdSync(id, details);
-      if (item != null) {
-        items.add(item);
-      } else {
-        // Add this `id` as a missingItemId only if it is in the requested set,
-        // and thus should have been found by `_getByIdSync`.
-        if ((requestCache[details.cacheKey] ?? <String>{}).contains(id)) {
-          missingItemIds.add(id);
-        }
-      }
-    }
-
-    return Right(ReadListSuccess<T>.fromList(items, details, missingItemIds));
-  }
-
   @override
   Future<WriteResult<T>> setItem(T item, RequestDetails<T> details) async {
     assert(
@@ -180,16 +157,5 @@ class LocalMemorySource<T extends Model> extends Source<T> {
       setItem(item, details);
     }
     return Future.value(Right(BulkWriteSuccess<T>(items, details: details)));
-  }
-
-  @override
-  Future<WriteResult<T>> setSelected(
-    T item,
-    RequestDetails<T> details, {
-    bool isSelected = true,
-  }) async {
-    setItem(item, details);
-    isSelected ? selectedIds.add(item.id!) : selectedIds.remove(item.id);
-    return Right(WriteSuccess(item, details: details));
   }
 }

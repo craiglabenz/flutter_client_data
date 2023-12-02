@@ -357,22 +357,6 @@ void main() {
     });
   });
 
-  group('SourceList.getSelected should', () {
-    test('load and cache items', () async {
-      final sl = getSourceList(
-          getRequestDelegate([twoElementResponseBody, twoElementResponseBody]));
-      final localReadResult = await sl.getSelected(localDetails);
-      expect(localReadResult.getOrRaise().items.length, 0);
-
-      final remoteReadResult = await sl.getSelected(refreshDetails);
-      expect(remoteReadResult.getOrRaise().items.length, 2);
-      expect((sl.sources[0] as LocalMemorySource<TestModel>).items.length, 2);
-
-      final localReadResult2 = await sl.getSelected(localDetails);
-      expect(localReadResult2.getOrRaise().items.length, 2);
-    });
-  });
-
   group('SourceList.setItem should', () {
     test('persist an item to all layers', () async {
       const newObj = TestModel(id: null, msg: "new");
@@ -426,31 +410,6 @@ void main() {
       expect(
         () => sl.setItems([newObj], refreshDetails),
         throwsAssertionError,
-      );
-    });
-  });
-
-  group('SourceList.setSelected should', () {
-    test('persist remotely', () async {
-      const newObj = TestModel(id: 'item 1', msg: 'new');
-      final sl = getSourceList(getRequestDelegate([detailResponseBody]));
-      final writeResult = await sl.setSelected(
-        newObj,
-        localDetails,
-      );
-      expect(writeResult, isRight);
-    });
-
-    test('persist locally', () async {
-      const newObj = TestModel(id: 'item 1', msg: 'new');
-      final sl = getSourceList(getRequestDelegate([]));
-      await sl.setSelected(
-        newObj,
-        localDetails,
-      );
-      expect(
-        (sl.sources.first as LocalMemorySource).selectedIds,
-        contains(newObj.id!),
       );
     });
   });

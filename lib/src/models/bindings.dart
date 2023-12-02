@@ -5,12 +5,10 @@ class Bindings<T extends Model> {
     required this.fromJson,
     required this.getDetailUrl,
     required this.getListUrl,
-    required this.getSelectedItemsUrl,
   });
   // Url creators.
   final ApiUrl Function(String id) getDetailUrl;
   final ApiUrl Function() getListUrl;
-  final ApiUrl Function() getSelectedItemsUrl;
 
   // Builders.
   final T Function(Map<String, dynamic> data) fromJson;
