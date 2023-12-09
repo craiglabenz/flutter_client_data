@@ -44,5 +44,5 @@ abstract class Source<T extends Model> extends DataContract<T> {
   //             setName: details.setName, missingItemIds: missingItemIds));
 
   @override
-  String toString() => '${runtimeType.toString()}()';
+  String toString() => '$runtimeType()';
 }

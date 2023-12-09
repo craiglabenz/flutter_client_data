@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:client_data/client_data.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 class LoginUrl extends ApiUrl {
   const LoginUrl() : super(path: 'users/login/');

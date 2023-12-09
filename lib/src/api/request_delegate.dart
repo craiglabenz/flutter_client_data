@@ -1,7 +1,7 @@
 import 'dart:convert';
+import 'package:client_data/client_data.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'api.dart';
 
 class UnexpectedRequest implements Exception {
   UnexpectedRequest(this.message);
@@ -30,35 +30,35 @@ typedef WriteRequestHandler = Future<http.Response> Function(
 typedef ResponseProcessor = ApiResult Function(DateTime, http.Response);
 
 Future<http.Response> unexpectedGet(Uri url, {Map<String, String>? headers}) =>
-    throw UnexpectedRequest('Unexpected GET ${url.toString()}');
+    throw UnexpectedRequest('Unexpected GET $url');
 Future<http.Response> unexpectedPost(
   Uri url, {
   Map<String, String>? headers,
   Object? body,
   Encoding? encoding,
 }) =>
-    throw UnexpectedRequest('Unexpected POST ${url.toString()}');
+    throw UnexpectedRequest('Unexpected POST $url');
 Future<http.Response> unexpectedPut(
   Uri url, {
   Map<String, String>? headers,
   Object? body,
   Encoding? encoding,
 }) =>
-    throw UnexpectedRequest('Unexpected PUT ${url.toString()}');
+    throw UnexpectedRequest('Unexpected PUT $url');
 Future<http.Response> unexpectedPatch(
   Uri url, {
   Map<String, String>? headers,
   Object? body,
   Encoding? encoding,
 }) =>
-    throw UnexpectedRequest('Unexpected PATCH ${url.toString()}');
+    throw UnexpectedRequest('Unexpected PATCH $url');
 Future<http.Response> unexpectedDelete(
   Uri url, {
   Map<String, String>? headers,
   Object? body,
   Encoding? encoding,
 }) =>
-    throw UnexpectedRequest('Unexpected DELETE ${url.toString()}');
+    throw UnexpectedRequest('Unexpected DELETE $url');
 
 /// Interface for something that can get data out onto the network.
 class RequestDelegate {

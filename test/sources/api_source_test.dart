@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:client_data/client_data.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'test_model.dart';
 
@@ -33,7 +33,7 @@ ApiSource<TestModel> getSrc({
 void main() {
   group('ApiSource.getById should', () {
     test('make a GET request and process its response', () async {
-      ApiSource<TestModel> src = getSrc(
+      final ApiSource<TestModel> src = getSrc(
         readHandler: (url, {headers}) async {
           return http.Response(
             jsonEncode({'id': 'abc', 'msg': 'amazing'}),
@@ -51,7 +51,7 @@ void main() {
     });
 
     test('work with a real timer', () async {
-      ApiSource<TestModel> src = getSrc(
+      final ApiSource<TestModel> src = getSrc(
         readHandler: (url, {headers}) async {
           return http.Response(
             jsonEncode({'id': 'abc', 'msg': 'amazing'}),
@@ -69,25 +69,29 @@ void main() {
       );
     });
 
-    test('return null from a 404', () async {
-      ApiSource<TestModel> src = getSrc(
-        readHandler: (url, {headers}) async {
-          return http.Response(
-            'Not found',
-            HttpStatus.notFound,
-            headers: {HttpHeaders.contentTypeHeader: 'text/plain'},
-          );
-        },
-      );
-      final result = await src.getById('abc', RequestDetails());
-      expect(result, isRight);
-      expect(result.getOrRaise().item, null);
-    }, timeout: const Timeout(Duration(milliseconds: 50)));
+    test(
+      'return null from a 404',
+      () async {
+        final ApiSource<TestModel> src = getSrc(
+          readHandler: (url, {headers}) async {
+            return http.Response(
+              'Not found',
+              HttpStatus.notFound,
+              headers: {HttpHeaders.contentTypeHeader: 'text/plain'},
+            );
+          },
+        );
+        final result = await src.getById('abc', RequestDetails());
+        expect(result, isRight);
+        expect(result.getOrRaise().item, null);
+      },
+      timeout: const Timeout(Duration(milliseconds: 50)),
+    );
   });
 
   group('ApiSource.getByIds should', () {
     test('make a GET request and process its response', () async {
-      ApiSource<TestModel> src = getSrc(
+      final ApiSource<TestModel> src = getSrc(
         readHandler: (url, {headers}) async {
           return http.Response(
             jsonEncode(
@@ -111,7 +115,7 @@ void main() {
     });
 
     test('handle partial responses', () async {
-      ApiSource<TestModel> src = getSrc(
+      final ApiSource<TestModel> src = getSrc(
         readHandler: (url, {headers}) async {
           return http.Response(
             jsonEncode(
@@ -134,10 +138,10 @@ void main() {
     });
 
     test('handle zero hits', () async {
-      ApiSource<TestModel> src = getSrc(
+      final ApiSource<TestModel> src = getSrc(
         readHandler: (url, {headers}) async {
           return http.Response(
-            jsonEncode({'results': []}),
+            jsonEncode({'results': <Object>[]}),
             HttpStatus.ok,
             headers: respHeaders,
           );
@@ -152,7 +156,7 @@ void main() {
     });
 
     test('handle a 404', () async {
-      ApiSource<TestModel> src = getSrc(
+      final ApiSource<TestModel> src = getSrc(
         readHandler: (url, {headers}) async {
           return http.Response(
             'Not found',

@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:client_data/client_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
-import 'package:client_data/client_data.dart';
 
 import 'test_model.dart';
 
@@ -23,17 +23,17 @@ final requestHeaders = <String, String>{
 };
 const errorBody = '{"error": "not found"}';
 
-final obj = TestModel.fromJson(jsonDecode(detailResponseBody));
-final obj2 = TestModel.fromJson(jsonDecode(detailResponseBody2));
+final obj = TestModel.fromJson(jsonDecode(detailResponseBody) as Json);
+final obj2 = TestModel.fromJson(jsonDecode(detailResponseBody2) as Json);
 
 final details = RequestDetails<TestModel>();
 final localDetails = RequestDetails<TestModel>(requestType: RequestType.local);
 final refreshDetails = RequestDetails<TestModel>(
   requestType: RequestType.refresh,
 );
-final abcDetails = RequestDetails<TestModel>(filters: const [
-  MsgStartsWithFilter('abc'),
-]);
+final abcDetails = RequestDetails<TestModel>(
+  filters: const [MsgStartsWithFilter('abc')],
+);
 final localAbcDetails = RequestDetails<TestModel>(
   filters: const [MsgStartsWithFilter('abc')],
   requestType: RequestType.local,
@@ -49,15 +49,25 @@ RequestDelegate getRequestDelegate(
   final WriteRequestHandler? postHandler = canCreate //
       ? (url, {headers, body, encoding}) {
           count++;
-          return Future.value(http.Response(bodies[count - 1], statusCode,
-              headers: returnHeaders));
+          return Future.value(
+            http.Response(
+              bodies[count - 1],
+              statusCode,
+              headers: returnHeaders,
+            ),
+          );
         }
       : null;
   final WriteRequestHandler? updateHandler = canUpdate //
       ? (url, {headers, body, encoding}) {
           count++;
-          return Future.value(http.Response(bodies[count - 1], statusCode,
-              headers: returnHeaders));
+          return Future.value(
+            http.Response(
+              bodies[count - 1],
+              statusCode,
+              headers: returnHeaders,
+            ),
+          );
         }
       : null;
 
@@ -143,9 +153,9 @@ void main() {
 
     test('honor request types in getById', () async {
       final sl = getSourceList(delegate404x2);
-      (sl.sources[0] as LocalMemorySource<TestModel>)
+      await (sl.sources[0] as LocalMemorySource<TestModel>)
           .setItem(obj, localDetails);
-      (sl.sources[1] as LocalMemorySource<TestModel>)
+      await (sl.sources[1] as LocalMemorySource<TestModel>)
           .setItem(obj, localDetails);
 
       final readResult = await sl.getById(obj.id!, details);
@@ -175,10 +185,14 @@ void main() {
           ),
         ]),
       );
-      expect((sl.sources[0] as LocalMemorySource).itemIds,
-          containsAll([_id, _id2]));
-      expect((sl.sources[1] as LocalMemorySource).itemIds,
-          containsAll([_id, _id2]));
+      expect(
+        (sl.sources[0] as LocalMemorySource).itemIds,
+        containsAll([_id, _id2]),
+      );
+      expect(
+        (sl.sources[1] as LocalMemorySource).itemIds,
+        containsAll([_id, _id2]),
+      );
     });
 
     test('get and cache items on partial returns', () async {
@@ -201,9 +215,9 @@ void main() {
 
     test('complete partially filled local hits', () async {
       final sl = getSourceList(twoItemdelegate200);
-      (sl.sources[0] as LocalMemorySource<TestModel>)
+      await (sl.sources[0] as LocalMemorySource<TestModel>)
           .setItem(obj, localDetails);
-      (sl.sources[1] as LocalMemorySource<TestModel>)
+      await (sl.sources[1] as LocalMemorySource<TestModel>)
           .setItem(obj, localDetails);
 
       final localReadResult =
@@ -218,9 +232,9 @@ void main() {
 
     test('honor request types', () async {
       final sl = getSourceList(emptyDelegate);
-      (sl.sources[0] as LocalMemorySource<TestModel>)
+      await (sl.sources[0] as LocalMemorySource<TestModel>)
           .setItems([obj, obj2], localDetails);
-      (sl.sources[1] as LocalMemorySource<TestModel>)
+      await (sl.sources[1] as LocalMemorySource<TestModel>)
           .setItems([obj, obj2], localDetails);
 
       final readResult = await sl.getByIds({obj.id!, obj2.id!}, details);
@@ -237,9 +251,9 @@ void main() {
 
     test('surface 404s', () async {
       final sl = getSourceList(delegate404x2);
-      (sl.sources[0] as LocalMemorySource<TestModel>)
+      await (sl.sources[0] as LocalMemorySource<TestModel>)
           .setItems([obj, obj2], localDetails);
-      (sl.sources[1] as LocalMemorySource<TestModel>)
+      await (sl.sources[1] as LocalMemorySource<TestModel>)
           .setItems([obj, obj2], localDetails);
 
       final readResult = await sl.getByIds({obj.id!, obj2.id!}, details);
@@ -258,7 +272,7 @@ void main() {
   group('SourceList.getItems should', () {
     test('load items', () async {
       final sl = getSourceList(twoItemdelegate200x2);
-      (sl.sources[0] as LocalMemorySource<TestModel>)
+      await (sl.sources[0] as LocalMemorySource<TestModel>)
           .setItems([obj, obj2], localDetails);
 
       final localReadResult = await sl.getItems(localDetails);
@@ -283,11 +297,10 @@ void main() {
     });
 
     test('handle 404s', () async {
-      final sl = getSourceList(getRequestDelegate(
-        [errorBody],
-        statusCode: HttpStatus.notFound,
-      ));
-      (sl.sources[0] as LocalMemorySource<TestModel>)
+      final sl = getSourceList(
+        getRequestDelegate([errorBody], statusCode: HttpStatus.notFound),
+      );
+      await (sl.sources[0] as LocalMemorySource<TestModel>)
           .setItems([obj, obj2], localDetails);
 
       final remoteReadResult = await sl.getItems(refreshDetails);
@@ -316,10 +329,12 @@ void main() {
     });
 
     test('honor filters', () async {
-      final sl = getSourceList(getRequestDelegate([
-        twoElementResponseBody,
-        twoElementResponseBody,
-      ]));
+      final sl = getSourceList(
+        getRequestDelegate([
+          twoElementResponseBody,
+          twoElementResponseBody,
+        ]),
+      );
       await sl.getItems(details);
 
       final localReadResult = await sl.getItems(localDetails);
@@ -336,7 +351,6 @@ void main() {
 
       final globalMsgFredDetails = RequestDetails<TestModel>(
         filters: const [FieldEquals<TestModel>('msg', 'Fred')],
-        requestType: RequestType.global,
       );
 
       final globalResults = await sl.getItems(globalMsgFredDetails);
@@ -359,7 +373,7 @@ void main() {
 
   group('SourceList.setItem should', () {
     test('persist an item to all layers', () async {
-      const newObj = TestModel(id: null, msg: "new");
+      const newObj = TestModel(id: null, msg: 'new');
       final sl = getSourceList(creatableDelegate);
       final writeResult = await sl.setItem(newObj, details);
       expect(writeResult.getOrRaise().item, obj);
@@ -369,9 +383,10 @@ void main() {
     });
 
     test('honor setNames', () async {
-      const newObj = TestModel(id: null, msg: "new");
+      const newObj = TestModel(id: null, msg: 'new');
       final sl = getSourceList(
-          getRequestDelegate([listResponseBody], canCreate: true));
+        getRequestDelegate([listResponseBody], canCreate: true),
+      );
       final writeResult = await sl.setItem(newObj, abcDetails);
       final savedObj = writeResult.getOrRaise().item;
       expect(savedObj, obj);
@@ -388,9 +403,12 @@ void main() {
     test('persist items to all local layers', () async {
       const newObj = TestModel(id: 'item 1', msg: 'new');
       const newObj2 = TestModel(id: 'item 2', msg: 'new 2');
-      final sl = getSourceList(getRequestDelegate(
+      final sl = getSourceList(
+        getRequestDelegate(
           [detailResponseBody, detailResponseBody2],
-          canCreate: true));
+          canCreate: true,
+        ),
+      );
       final writeResult = await sl.setItems(
         [newObj, newObj2],
         localDetails,
@@ -404,9 +422,12 @@ void main() {
     test('throw for remote setItems', () async {
       const newObj = TestModel(id: 'item 1', msg: 'new');
       // Config of SourceList does not matter for this test
-      final sl = getSourceList(getRequestDelegate(
+      final sl = getSourceList(
+        getRequestDelegate(
           [detailResponseBody, detailResponseBody2],
-          canCreate: true));
+          canCreate: true,
+        ),
+      );
       expect(
         () => sl.setItems([newObj], refreshDetails),
         throwsAssertionError,

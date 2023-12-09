@@ -24,7 +24,6 @@ class ApiUrl {
   const ApiUrl({
     required this.path,
     this.context = _empty,
-    this.params = _empty,
   });
 
   static const String v1 = 'api/v1';
@@ -44,11 +43,8 @@ class ApiUrl {
   /// Map of values used to fill placeholders in [uri].
   final Map<String, dynamic> context;
 
-  /// Map of values to be coerced into a querystring for GET requests.
-  final Map<String, dynamic> params;
-
   String get value {
-    var url = '${ApiUrl.v1}/$path$queryString';
+    var url = '${ApiUrl.v1}/$path';
     for (final key in context.keys) {
       if (url.contains('{{$key}}')) {
         url = url.replaceAll('{{$key}}', context[key] as String);
@@ -58,17 +54,6 @@ class ApiUrl {
   }
 
   Uri get uri => Uri.parse(value);
-
-  String get queryString {
-    if (params.isEmpty) return '';
-
-    final stringData = <String, String>{};
-    params.forEach((key, dynamic value) {
-      stringData[key] = value.toString();
-    });
-    final uri = Uri(queryParameters: stringData);
-    return '?${uri.query}';
-  }
 }
 
 /// Useful for tests.

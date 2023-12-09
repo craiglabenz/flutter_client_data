@@ -1,5 +1,5 @@
-import 'package:dartz/dartz.dart';
 import 'package:client_data/client_data.dart';
+import 'package:dartz/dartz.dart';
 
 class LocalMemorySource<T extends Model> extends Source<T> {
   Map<String, T> items = {};
@@ -77,14 +77,12 @@ class LocalMemorySource<T extends Model> extends Source<T> {
 
     // Assumes all IDs in `details.setName` have a matching object in `items`,
     // because that is the job of `setItem`.
-    Iterable<T> itemsIter =
+    final Iterable<T> itemsIter =
         requestCache[details.cacheKey]!.map<T>((String id) => items[id]!);
 
-    Iterable<T> filteredItemsIter =
-        itemsIter.where((T obj) => _passesAllFilters(
-              obj,
-              details.filters,
-            ));
+    final Iterable<T> filteredItemsIter = itemsIter.where(
+      (T obj) => _passesAllFilters(obj, details.filters),
+    );
 
     return Right(
       ReadListSuccess<T>.fromList(filteredItemsIter.toList(), details, {}),
@@ -92,7 +90,7 @@ class LocalMemorySource<T extends Model> extends Source<T> {
   }
 
   bool _passesAllFilters(T obj, List<ReadFilter<T>> filters) {
-    for (ReadFilter<T> filter in filters) {
+    for (final ReadFilter<T> filter in filters) {
       if (!filter.predicate(obj)) return false;
     }
     return true;
@@ -105,9 +103,9 @@ class LocalMemorySource<T extends Model> extends Source<T> {
       return Right(ReadListSuccess.fromList([], details, <String>{}));
     }
 
-    Set<String> satisfyingIds = itemIds;
-    for (T item in items.values) {
-      for (ReadFilter<T> filter in details.filters) {
+    final Set<String> satisfyingIds = itemIds;
+    for (final T item in items.values) {
+      for (final ReadFilter<T> filter in details.filters) {
         if (!filter.predicate(item)) {
           satisfyingIds.remove(item.id);
         }
@@ -115,7 +113,7 @@ class LocalMemorySource<T extends Model> extends Source<T> {
     }
 
     final satisfyingItems = <T>[];
-    for (String id in satisfyingIds) {
+    for (final String id in satisfyingIds) {
       satisfyingItems.add(items[id]!);
     }
     return Right(
@@ -153,7 +151,7 @@ class LocalMemorySource<T extends Model> extends Source<T> {
     List<T> items,
     RequestDetails<T> details,
   ) {
-    for (T item in items) {
+    for (final T item in items) {
       setItem(item, details);
     }
     return Future.value(Right(BulkWriteSuccess<T>(items, details: details)));

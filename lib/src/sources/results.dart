@@ -65,13 +65,13 @@ class ReadSuccess<T extends Model> with _$ReadSuccess<T> {
 
 @Freezed()
 class ReadListSuccess<T extends Model> with _$ReadListSuccess<T> {
-  const ReadListSuccess._();
   const factory ReadListSuccess({
     required List<T> items,
     required Map<String, T> itemsMap,
     required Set<String> missingItemIds,
     required RequestDetails<T> details,
   }) = _ReadListSuccess;
+  const ReadListSuccess._();
 
   /// Map-friendly constructor.
   factory ReadListSuccess.fromMap(

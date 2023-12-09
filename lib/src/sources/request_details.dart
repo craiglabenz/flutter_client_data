@@ -46,7 +46,7 @@ class RequestDetails<T extends Model> extends Equatable {
   List<Object?> get props => [
         requestType,
         shouldOverwrite,
-        ...filters.map<int>((filter) => filter.hashCode).toList(),
+        ...filters.map<int>((filter) => filter.hashCode),
         pagination,
       ];
 
@@ -58,7 +58,7 @@ class RequestDetails<T extends Model> extends Equatable {
   int _getCacheKey() =>
       runtimeType.hashCode ^
       mapPropsToHashCode([
-        ...filters.map<int>((filter) => filter.hashCode).toList(),
+        ...filters.map<int>((filter) => filter.hashCode),
         pagination,
       ]);
 
@@ -75,7 +75,8 @@ class RequestDetails<T extends Model> extends Equatable {
 
   @override
   String toString() => 'RequestDetails(requestType: $requestType, filters: '
-      '${filters.map<String>((filter) => filter.toString()).toList()}, pagination: $pagination)';
+      '${filters.map<String>((filter) => filter.toString()).toList()}, '
+      'pagination: $pagination)';
 
   void assertEmpty(String functionName) {
     assert(isEmpty, 'Must not supply filters or pagination to $functionName');

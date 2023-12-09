@@ -1,13 +1,21 @@
 import 'dart:math';
 import 'package:client_data/client_data.dart';
 import 'package:dartz/dartz.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mockito/mockito.dart';
 
+@immutable
 class TestModel extends Model {
   const TestModel({required super.id, this.msg = defaultMessage});
+
   factory TestModel.randomId([String msg = defaultMessage]) => TestModel(
         id: Random().nextDouble().toString(),
         msg: msg,
+      );
+
+  factory TestModel.fromJson(Map<String, dynamic> json) => TestModel(
+        id: json['id'] as String?,
+        msg: json['msg'] as String,
       );
   final String msg;
 
@@ -15,11 +23,6 @@ class TestModel extends Model {
 
   @override
   Map<String, dynamic> toJson() => {'id': this.id, 'msg': msg};
-
-  static TestModel fromJson(Map<String, dynamic> json) => TestModel(
-        id: json['id']!,
-        msg: json['msg']!,
-      );
 
   @override
   bool operator ==(Object other) =>
@@ -57,7 +60,7 @@ class MsgStartsWithFilter<T extends TestModel> extends ReadFilter<T> {
 class FakeSourceList<T extends Model> extends Fake implements SourceList<T> {
   List<T> objs = <T>[];
 
-  addObj(T obj) => objs.add(obj);
+  void addObj(T obj) => objs.add(obj);
 
   @override
   Future<ReadResult<T>> getById(

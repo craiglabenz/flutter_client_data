@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:client_data/src/api/api.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 
 final stubUri = const StubUrl().uri;
@@ -59,8 +59,10 @@ void main() {
         DateTime.now(),
         getResp(statusCode: 500),
       ) as ApiError;
-      expect(result.error,
-          const ErrorMessage.fromMap({'error': 'Unknown 500 Error'}));
+      expect(
+        result.error,
+        const ErrorMessage.fromMap({'error': 'Unknown 500 Error'}),
+      );
       expect(result.statusCode, 500);
       expect(result.url, stubUri.toString());
       expect(result.responseTime, greaterThan(Duration.zero));

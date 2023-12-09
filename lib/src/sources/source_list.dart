@@ -1,12 +1,12 @@
-import 'package:dartz/dartz.dart';
 import 'package:client_data/client_data.dart';
+import 'package:dartz/dartz.dart';
 
 /// Data component which iteratively asks individual sources for an object.
 ///
 /// Sources that originally fail to yield and object have it cached if a
 /// fallback source is able to yield it.
 ///
-/// The [RequestType] parameter on [RequestDetails<T>] and [GetDetails] can be used to
+/// The [RequestType] parameter on [RequestDetails] can be used to
 /// control which sources are asked, which is helpful when you want to refresh
 /// data.
 class SourceList<T extends Model> extends DataContract<T> {
@@ -156,7 +156,7 @@ class SourceList<T extends Model> extends DataContract<T> {
         return sourceResult;
       }
 
-      List<T> items = sourceResult.getOrRaise().items;
+      final List<T> items = sourceResult.getOrRaise().items;
       if (items.isNotEmpty) {
         await _cacheItems(items, emptySources, details);
         return Right(ReadListSuccess<T>.fromList(items, details, {}));
@@ -169,7 +169,7 @@ class SourceList<T extends Model> extends DataContract<T> {
 
   @override
   Future<WriteResult<T>> setItem(T item, RequestDetails<T> details) async {
-    // T _item = item;
+    T itemDup = item;
     for (final ms in getSources(
       requestType: details.requestType,
       // Hit API first if item is new, so as to get an Id
@@ -177,7 +177,7 @@ class SourceList<T extends Model> extends DataContract<T> {
     )) {
       if (ms.unmatched) continue;
 
-      final result = await ms.source.setItem(item, details);
+      final result = await ms.source.setItem(itemDup, details);
       if (result.isLeft()) {
         return result;
       }
@@ -190,10 +190,10 @@ class SourceList<T extends Model> extends DataContract<T> {
             WriteFailure<T>.serverError('Failed to generate Id for new $T'),
           );
         }
-        item = successfulResult.item;
+        itemDup = successfulResult.item;
       }
     }
-    return Right(WriteSuccess<T>(item, details: details));
+    return Right(WriteSuccess<T>(itemDup, details: details));
   }
 
   @override
@@ -201,8 +201,10 @@ class SourceList<T extends Model> extends DataContract<T> {
     List<T> items,
     RequestDetails<T> details,
   ) async {
-    assert(details.requestType == RequestType.local,
-        'setItems is a local-only method');
+    assert(
+      details.requestType == RequestType.local,
+      'setItems is a local-only method',
+    );
     for (final ms in getSources(requestType: details.requestType)) {
       if (ms.unmatched) continue;
       final result = await ms.source.setItems(items, details);

@@ -1,17 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'api.dart';
+import 'package:client_data/client_data.dart';
 
 typedef HeadersBuilder = Map<String, String> Function();
 
 /// Handler for RESTful external communications.
 class RestApi {
   RestApi({
-    RequestDelegate? delegate,
-    this.forceEndingSlash = false,
     required this.apiBaseUrl,
     required this.headersBuilder,
+    RequestDelegate? delegate,
+    this.forceEndingSlash = false,
   }) : _delegate = delegate ?? RequestDelegate.live();
 
   final RequestDelegate _delegate;
@@ -69,7 +69,7 @@ class RestApi {
     if (request is ReadApiRequest &&
         request.params != null &&
         request.params!.isNotEmpty) {
-      url = '$url${Uri(queryParameters: request.params).toString()}';
+      url = '$url${Uri(queryParameters: request.params)}';
     }
     return url;
   }
@@ -108,10 +108,15 @@ class RestApi {
     return result;
   }
 
-  Future<ApiResult> update(WriteApiRequest request) async {
+  Future<ApiResult> update(
+    WriteApiRequest request, {
+    bool partial = false,
+  }) async {
     final headers = getDefaultHeaders();
 
-    final result = await _delegate.put(
+    final fn = partial ? _delegate.patch : _delegate.put;
+
+    final result = await fn(
       _finishUrl(request),
       body: request.body,
       headers: headers,

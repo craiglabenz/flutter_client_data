@@ -45,8 +45,8 @@ void main() {
     bindings: Bindings<Nested>(
       getDetailUrl: (String id) => ApiUrl(path: '/nested/$id'),
       fromJson: (Map<String, dynamic> data) => Nested(
-        id: data['id'],
-        body: data['body'],
+        id: data['id'] as String?,
+        body: data['body'] as String,
       ),
       getListUrl: () => const ApiUrl(path: '/nested'),
     ),
@@ -56,11 +56,11 @@ void main() {
     late Repository<Nested> nestedRepository;
 
     setUpAll(() {
-      nestedRepository = Repository<Nested>(nestedSourceList);
-      nestedRepository.setItem(
-        Nested(id: 'abc', body: 'message here'),
-        RequestDetails.write(),
-      );
+      nestedRepository = Repository<Nested>(nestedSourceList)
+        ..setItem(
+          Nested(id: 'abc', body: 'message here'),
+          RequestDetails.write(),
+        );
     });
 
     test('seamlessly load obj', () async {
@@ -77,18 +77,21 @@ void main() {
         comment:
             RelatedModel<Nested>(id: 'unknown', repository: nestedRepository),
       );
-      expect((await obj.comment.obj), isNull);
+      expect(await obj.comment.obj, isNull);
     });
 
     group('RelatedModelList should', () {
       late Repository<Nested> nestedRepository;
 
       setUpAll(() {
-        nestedRepository = Repository<Nested>(nestedSourceList);
-        nestedRepository.setItems([
-          Nested(id: 'abc', body: 'message here'),
-          Nested(id: 'def', body: 'second message here'),
-        ], RequestDetails.write(requestType: RequestType.local));
+        nestedRepository = Repository<Nested>(nestedSourceList)
+          ..setItems(
+            [
+              Nested(id: 'abc', body: 'message here'),
+              Nested(id: 'def', body: 'second message here'),
+            ],
+            RequestDetails.write(requestType: RequestType.local),
+          );
       });
 
       test('seamlessly load objs', () async {
@@ -99,7 +102,7 @@ void main() {
             repository: nestedRepository,
           ),
         );
-        final items = (await obj.comments.objs);
+        final items = await obj.comments.objs;
         final itemsMap = <String, Nested>{};
         // ignore: avoid_function_literals_in_foreach_calls
         items.forEach((item) => itemsMap[item.id!] = item);
@@ -115,7 +118,7 @@ void main() {
             repository: nestedRepository,
           ),
         );
-        expect((await obj.comments.objs), isEmpty);
+        expect(await obj.comments.objs, isEmpty);
       });
     });
   });

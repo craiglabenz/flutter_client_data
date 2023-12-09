@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:dartz/dartz.dart';
 import 'package:client_data/client_data.dart';
+import 'package:dartz/dartz.dart';
 import 'package:get_it/get_it.dart';
 
 class ApiSource<T extends Model> extends Source<T> {
@@ -94,7 +94,7 @@ class ApiSource<T extends Model> extends Source<T> {
         }
 
         final missingItemIds = <String>{};
-        for (String id in ids) {
+        for (final String id in ids) {
           if (!itemsById.containsKey(id)) {
             missingItemIds.add(id);
           }
@@ -126,7 +126,7 @@ class ApiSource<T extends Model> extends Source<T> {
     queuedIds.clear();
     final byIds = await getByIds(
       ids,
-      RequestDetails<T>(requestType: RequestType.global),
+      RequestDetails<T>(),
     );
     byIds.fold(
       (ReadFailure<T> l) {
@@ -198,11 +198,12 @@ class ApiSource<T extends Model> extends Source<T> {
         html: (HtmlApiResultBody body) => null,
         json: (JsonApiResultBody body) {
           if (body.data.containsKey('results')) {
-            // TODO: log that this is unexpected for [result.url]
-            if ((body.data['results'] as List).length != 1) {
-              // TODO: log that this is even more unexpected
+            // TODO(craiglabenz): log that this is unexpected for [result.url]
+            if ((body.data['results']! as List).length != 1) {
+              // TODO(craiglabenz): log that this is even more unexpected
             }
-            final List<T> items = ((body.data['results']! as List).cast<Json>())
+            final List<T> items = (body.data['results']! as List)
+                .cast<Json>()
                 .map<T>(bindings.fromJson)
                 .toList();
             return items.first;
@@ -218,7 +219,7 @@ class ApiSource<T extends Model> extends Source<T> {
         json: (JsonApiResultBody body) {
           if (body.data.containsKey('results')) {
             final List<Map<String, dynamic>> results =
-                (body.data['results'] as List).cast<Json>();
+                (body.data['results']! as List).cast<Json>();
             final List<T> items = results.map<T>(bindings.fromJson).toList();
             return items;
           } else {

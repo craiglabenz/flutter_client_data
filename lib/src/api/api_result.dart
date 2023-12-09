@@ -1,5 +1,5 @@
+import 'package:client_data/client_data.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'api.dart';
 
 part 'api_result.freezed.dart';
 
@@ -70,7 +70,6 @@ class ErrorMessage with _$ErrorMessage {
 
   String get plain => when<String>(
         fromString: (message) => message,
-        fromMap: (msg) =>
-            '${msg.keys.first}: ${msg[msg.keys.first].toString()}',
+        fromMap: (msg) => '${msg.keys.first}: ${msg[msg.keys.first]}',
       );
 }

@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:client_data/client_data.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'test_model.dart';
 
 final details = RequestDetails<TestModel>();
@@ -117,7 +117,7 @@ void main() {
 
     test('return known items', () async {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, details);
+      await mem.setItem(item, details);
       final maybeResult = await mem.getById(item.id!, details);
       expect(maybeResult, isRight);
       expect(maybeResult.getOrRaise().item, equals(item));
@@ -125,7 +125,7 @@ void main() {
 
     test('return empty ReadSuccess for unknown items', () async {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, details);
+      await mem.setItem(item, details);
 
       const item2 = TestModel(id: 'item 2');
 
@@ -136,12 +136,12 @@ void main() {
 
     test('honor setName', () async {
       const item = TestModel(id: 'item 1');
-      mem.setItem(item, details);
+      await mem.setItem(item, details);
       final retrievedItem = await mem.getById(item.id!, abcDetails);
       expect(retrievedItem, isRight);
       expect(retrievedItem.getOrRaise().item, isNull);
 
-      mem.setItem(item, abcDetails);
+      await mem.setItem(item, abcDetails);
       final retrievedItem2 = await mem.getById(item.id!, abcDetails);
       expect(retrievedItem2, isRight);
       expect(retrievedItem2.getOrRaise().item, item);
@@ -156,7 +156,7 @@ void main() {
         pagination: Pagination.page(2),
       );
       final item = TestModel.randomId();
-      mem.setItem(item, page1Deets);
+      await mem.setItem(item, page1Deets);
 
       final result = await mem.getById(item.id!, deets);
       expect(result, isRight);
@@ -180,7 +180,7 @@ void main() {
     });
 
     test('return items', () async {
-      mem.setItems([item, item2], details);
+      await mem.setItems([item, item2], details);
       final maybeResult = await mem.getByIds(
         {item.id!, item2.id!},
         details,
@@ -195,7 +195,7 @@ void main() {
 
     test('return items for partial hits', () async {
       const item3 = TestModel(id: 'item 3');
-      mem.setItems([item, item2], details);
+      await mem.setItems([item, item2], details);
       final maybeResult = await mem.getByIds(
         {item.id!, item2.id!, item3.id!},
         details,
@@ -220,7 +220,7 @@ void main() {
       mem = LocalMemorySource<TestModel>();
     });
     test('return items', () async {
-      mem.setItems([item, item2], details);
+      await mem.setItems([item, item2], details);
       final maybeResult = await mem.getItems(details);
       final result = maybeResult.getOrRaise();
       expect(
@@ -230,7 +230,7 @@ void main() {
     });
 
     test('return no items from setName if empty', () async {
-      mem.setItems([item, item2], abcDetails);
+      await mem.setItems([item, item2], abcDetails);
 
       final xyzDetails = RequestDetails<TestModel>(
         filters: const [MsgStartsWithFilter('xyz')],
@@ -253,7 +253,7 @@ void main() {
     });
 
     test('return no items from custom setName if empty', () async {
-      mem.setItems([item, item2], details);
+      await mem.setItems([item, item2], details);
       final maybeResult = await mem.getItems(abcDetails);
       expect(maybeResult, isRight);
       final result = maybeResult.getOrRaise();
@@ -269,18 +269,20 @@ void main() {
 
     test('honor filters', () async {
       const item3 = TestModel(id: 'item 3', msg: 'holy moly');
-      mem.setItems([item, item2, item3], details);
+      await mem.setItems([item, item2, item3], details);
       final holyDetails = RequestDetails<TestModel>(
         filters: const [MsgStartsWithFilter('holy')],
       );
       final maybeResult = await mem.getItems(holyDetails);
       final result = maybeResult.getOrRaise();
-      expect(result,
-          ReadListSuccess<TestModel>.fromList([item3], holyDetails, {}));
+      expect(
+        result,
+        ReadListSuccess<TestModel>.fromList([item3], holyDetails, {}),
+      );
     });
 
     test('return items', () async {
-      mem.setItems([item, item2], details);
+      await mem.setItems([item, item2], details);
       final maybeResult = await mem.getItems(details);
       final result = maybeResult.getOrRaise();
       expect(
@@ -293,7 +295,7 @@ void main() {
       const asdf = TestModel(id: 'item 1', msg: 'asdf');
       const xyz = TestModel(id: 'item 2', msg: 'xyz');
 
-      mem.setItems([asdf, xyz], details);
+      await mem.setItems([asdf, xyz], details);
       final deets = RequestDetails<TestModel>(
         filters: const [MsgStartsWithFilter('asdf')],
       );
@@ -314,7 +316,7 @@ void main() {
 
       final item = TestModel.randomId();
       final item2 = TestModel.randomId();
-      mem.setItems([item, item2], page2Deets);
+      await mem.setItems([item, item2], page2Deets);
 
       final deetsResults = await mem.getItems(deets);
       expect(deetsResults.getOrRaise().items, hasLength(2));
@@ -381,15 +383,16 @@ void fullyContains(
   TestModel item, {
   List<int> cacheKeys = const [],
 }) {
-  expect(mem.itemIds, contains(item.id!));
-  expect(mem.items.containsKey(item.id!), true);
+  expect(item.id, isNotNull);
+  expect(mem.itemIds, contains(item.id));
+  expect(mem.items, contains(item.id));
   expect(
-    mem.requestCache[RequestDetails<TestModel>().cacheKey]!,
+    mem.requestCache[RequestDetails<TestModel>().cacheKey],
     contains(item.id),
   );
-  for (int setName in cacheKeys) {
-    expect(mem.requestCache.containsKey(setName), true);
-    expect(mem.requestCache[setName]!, contains(item.id));
+  for (final int setName in cacheKeys) {
+    expect(mem.requestCache, contains(setName));
+    expect(mem.requestCache[setName], contains(item.id));
   }
   expect(mem.items[item.id!]!.msg, item.msg);
 }

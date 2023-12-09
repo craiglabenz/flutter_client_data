@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'sources/test_model.dart';
 
 void main() {
-  final sl = FakeSourceList<TestModel>();
-  sl.addObj(const TestModel(id: 'does not matter'));
+  final sl = FakeSourceList<TestModel>()
+    ..addObj(const TestModel(id: 'does not matter'));
   final repo = Repository<TestModel>(sl);
   const TestModel obj = TestModel(id: 'also does not matter');
 
