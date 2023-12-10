@@ -3,6 +3,7 @@ import 'package:client_data/client_data.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mockito/mockito.dart';
+import 'package:shared_data/shared_data.dart';
 
 @immutable
 class TestModel extends Model {

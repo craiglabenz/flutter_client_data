@@ -1,5 +1,5 @@
-import 'package:client_data/client_data.dart';
 import 'package:equatable/equatable.dart';
+import 'package:shared_data/shared_data.dart';
 
 abstract class ReadFilter<T extends Model> extends Equatable {
   const ReadFilter();
@@ -14,7 +14,8 @@ class CreatedSinceFilter<T extends CreatedAtModel> extends ReadFilter<T> {
 
   @override
   bool predicate(T obj) =>
-      obj.createdAt.difference(createdCutoff) > Duration.zero;
+      obj.createdAt != null &&
+      obj.createdAt!.difference(createdCutoff) > Duration.zero;
 
   @override
   Map<String, String> toParams() =>

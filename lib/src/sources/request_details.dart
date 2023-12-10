@@ -2,6 +2,7 @@ import 'package:client_data/client_data.dart';
 import 'package:equatable/equatable.dart';
 // ignore: implementation_imports
 import 'package:equatable/src/equatable_utils.dart';
+import 'package:shared_data/shared_data.dart';
 
 class RequestDetails<T extends Model> extends Equatable {
   RequestDetails({

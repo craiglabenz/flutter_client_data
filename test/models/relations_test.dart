@@ -1,5 +1,6 @@
 import 'package:client_data/client_data.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_data/shared_data.dart';
 
 class Nested extends Model {
   Nested({required super.id, required this.body});

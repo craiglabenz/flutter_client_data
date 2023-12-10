@@ -1,5 +1,6 @@
 import 'package:client_data/client_data.dart';
 import 'package:dartz/dartz.dart';
+import 'package:shared_data/shared_data.dart';
 
 class LocalMemorySource<T extends Model> extends Source<T> {
   Map<String, T> items = {};

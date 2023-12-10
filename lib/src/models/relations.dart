@@ -2,6 +2,7 @@
 
 import 'package:client_data/client_data.dart';
 import 'package:equatable/equatable.dart';
+import 'package:shared_data/shared_data.dart';
 
 class RelatedModel<T extends Model> extends Equatable {
   RelatedModel({

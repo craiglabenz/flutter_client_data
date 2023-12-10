@@ -1,5 +1,6 @@
 import 'package:client_data/client_data.dart';
 import 'package:dartz/dartz.dart';
+import 'package:shared_data/shared_data.dart';
 
 /// Data component which iteratively asks individual sources for an object.
 ///

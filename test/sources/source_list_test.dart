@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:client_data/client_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_data/shared_data.dart';
 
 import 'test_model.dart';
 

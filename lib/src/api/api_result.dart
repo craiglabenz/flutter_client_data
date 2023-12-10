@@ -1,5 +1,5 @@
-import 'package:client_data/client_data.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:shared_data/shared_data.dart';
 
 part 'api_result.freezed.dart';
 

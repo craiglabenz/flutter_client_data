@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:client_data/client_data.dart';
 import 'package:dartz/dartz.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:shared_data/shared_data.dart';
 
 part 'results.freezed.dart';
 

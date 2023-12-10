@@ -1,5 +1,6 @@
 // import 'package:dartz/dartz.dart';
 import 'package:client_data/client_data.dart';
+import 'package:shared_data/shared_data.dart';
 
 abstract class Source<T extends Model> extends DataContract<T> {
   SourceType get sourceType;

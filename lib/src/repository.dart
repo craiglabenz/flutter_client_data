@@ -1,4 +1,5 @@
 import 'package:client_data/client_data.dart';
+import 'package:shared_data/shared_data.dart';
 
 class Repository<T extends Model> extends DataContract<T> {
   Repository(this.sourceList);

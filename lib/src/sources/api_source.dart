@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:client_data/client_data.dart';
 import 'package:dartz/dartz.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_data/shared_data.dart';
 
 class ApiSource<T extends Model> extends Source<T> {
   ApiSource({
